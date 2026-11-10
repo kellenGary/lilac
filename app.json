@@ -49,6 +49,17 @@
         }
       ]
     ],
-    "scheme": "lilac"
+    "scheme": "lilac",
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "ed50417d-c49e-411b-9f7d-2476930ef61e"
+      }
+    },
+    "owner": "kellengary"
   }
 }
