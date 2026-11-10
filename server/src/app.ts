@@ -1,4 +1,5 @@
 import { zValidator } from '@hono/zod-validator';
+import { sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
@@ -50,7 +51,15 @@ export function createApp(deps: AppDeps) {
     }),
   );
 
-  app.get('/health', (c) => c.json({ ok: true }));
+  // Touches the database so an uptime pinger also keeps the Supabase project from pausing.
+  app.get('/health', async (c) => {
+    try {
+      await db.execute(sql`select 1`);
+      return c.json({ ok: true });
+    } catch {
+      return c.json({ ok: false }, 503);
+    }
+  });
 
   app.use('/v1/*', async (c, next) => {
     const header = c.req.header('Authorization') ?? '';
