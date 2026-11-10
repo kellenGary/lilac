@@ -4,11 +4,13 @@ type SegmentedProps<T extends string> = {
   options: { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
+  /** Stretch across the available width as one pill-shaped control (used where it has a row to itself). */
+  fill?: boolean;
 };
 
-export function Segmented<T extends string>({ options, value, onChange }: SegmentedProps<T>) {
+export function Segmented<T extends string>({ options, value, onChange, fill }: SegmentedProps<T>) {
   return (
-    <View className="flex-row flex-wrap gap-0.5" accessibilityRole="tablist">
+    <View className={fill ? 'flex-row gap-1 rounded-full bg-track p-1' : 'flex-row flex-wrap gap-0.5'} accessibilityRole="tablist">
       {options.map((o) => {
         const active = o.value === value;
         return (
@@ -17,9 +19,11 @@ export function Segmented<T extends string>({ options, value, onChange }: Segmen
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
             onPress={() => onChange(o.value)}
-            className={`rounded-full px-3 py-1.5 ${active ? 'bg-ink' : ''}`}
+            className={`rounded-full px-3 py-1.5 ${fill ? 'flex-1 items-center py-2' : ''} ${active ? 'bg-ink' : ''}`}
           >
-            <Text className={`text-xs font-semibold ${active ? 'text-cream' : 'text-muted'}`}>{o.label}</Text>
+            <Text className={`${fill ? 'text-[13px]' : 'text-xs'} font-semibold ${active ? 'text-cream' : 'text-muted'}`}>
+              {o.label}
+            </Text>
           </Pressable>
         );
       })}

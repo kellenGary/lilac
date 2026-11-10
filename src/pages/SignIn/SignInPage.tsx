@@ -3,6 +3,8 @@ import { Pressable, ScrollView, Text, View, type TextInput } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { PlantState } from '@/lib/plant';
+import { speciesForWeek } from '@/lib/plantSpecies';
+import { todayKey, weekStartKey } from '@/lib/dates';
 import { BloomBackground, Button, Plant, Reveal, Wordmark } from '@/shared-components';
 import { useAuth } from '@/state/auth';
 import { useColors } from '@/state/theme';
@@ -91,7 +93,7 @@ export function SignInPage() {
               </View>
               <Reveal delay={600} style={{ marginTop: 24 }}>
                 <View className="hidden w-[300px] lg:flex">
-                  <Plant state={SHOWCASE} sway tight />
+                  <Plant state={SHOWCASE} species={speciesForWeek(weekStartKey(todayKey()))} sway tight />
                 </View>
               </Reveal>
             </View>

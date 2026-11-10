@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
-import { DynamicColorIOS, Platform } from 'react-native';
+import { Platform } from 'react-native';
 
 import { useColors } from '@/state/theme';
 
@@ -19,8 +19,8 @@ export default function TabsLayout() {
   }
 
   return (
-    // Selected tab color follows the system light/dark setting; the glass itself adapts to what is behind it.
-    <NativeTabs tintColor={DynamicColorIOS({ light: '#4F6F2F', dark: '#A8C98B' })}>
+    // Default system tint; the glass itself adapts to what is behind it.
+    <NativeTabs>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Icon sf={{ default: 'book', selected: 'book.fill' }} />
         <NativeTabs.Trigger.Label>Journal</NativeTabs.Trigger.Label>

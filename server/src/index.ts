@@ -7,6 +7,7 @@ import { parseKey } from './crypto';
 import { createDb } from './db/client';
 import { loadEnv, parseOrigins } from './env';
 import { createJevClassifier, createJevTagger } from './services/jev';
+import { createVault } from './vault';
 
 const env = loadEnv();
 
@@ -20,9 +21,11 @@ if (corsOrigins.length === 0) {
   console.warn('CORS_ORIGINS is empty: browsers will block every call from the web app. Set it to your site address.');
 }
 
+const db = createDb(env.DATABASE_URL);
+
 const app = createApp({
-  db: createDb(env.DATABASE_URL),
-  key: parseKey(env.ENTRY_ENCRYPTION_KEY),
+  db,
+  vault: createVault(db, parseKey(env.ENTRY_ENCRYPTION_KEY)),
   verifyToken: createSupabaseVerifier(env.SUPABASE_URL),
   deleteAuthUser: createSupabaseUserDeleter(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
   classify: createJevClassifier(ask),

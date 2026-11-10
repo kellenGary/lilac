@@ -32,3 +32,16 @@ export const entries = pgTable(
 );
 
 export type EntryRow = typeof entries.$inferSelect;
+
+/**
+ * One data key per user. Entries written from now on are encrypted with it, so one user's key opens only that user's
+ * entries. The key itself is stored wrapped (encrypted) by the server's master key, bound to this user id, so a copy
+ * of this table is useless without the master key. Deleting a row erases that user's data for good, backups included.
+ */
+export const userKeys = pgTable('user_keys', {
+  userId: uuid('user_id').primaryKey(),
+  wrappedKey: text('wrapped_key').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type UserKeyRow = typeof userKeys.$inferSelect;

@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 import { useTween, useTweenedNumber } from '@/lib/animation';
 import { formatLong, formatShort, weekNumber, weekRangeLabel, weekStartKey } from '@/lib/dates';
 import { plantStateForWeek, vitalityLabel } from '@/lib/plant';
+import { speciesForWeek } from '@/lib/plantSpecies';
 import { dailySeries, weeklySeries } from '@/lib/series';
 import { Button, Plant, Segmented, TrendChart } from '@/shared-components';
 import { useEntries } from '@/state/entries';
@@ -111,6 +112,7 @@ function PlantPanel() {
   const barFill = useTween(1000, 600);
   const weekCount = useWeekCount();
   const plant = plantStateForWeek(entries, weekStartKey(today));
+  const species = speciesForWeek(weekStartKey(today));
 
   return (
     <View>
@@ -121,7 +123,7 @@ function PlantPanel() {
         </Text>
       </View>
       <View className="w-48 self-center">
-        <Plant tight state={plant} sway />
+        <Plant tight state={plant} species={species} sway />
       </View>
       <View className="mt-3.5 h-1 rounded-sm bg-track">
         <View
@@ -162,12 +164,13 @@ export function MobileInsights() {
   const { entries, today } = useEntries();
   const weekCount = useWeekCount();
   const plant = plantStateForWeek(entries, weekStartKey(today));
+  const species = speciesForWeek(weekStartKey(today));
 
   return (
     <View className="overflow-hidden rounded-3xl border border-line bg-surface">
       <View className="flex-row items-center gap-4 p-4">
         <View className="w-20">
-          <Plant tight state={plant} sway />
+          <Plant tight state={plant} species={species} sway />
         </View>
         <View className="flex-1 gap-0.5">
           <Text className="text-xs font-semibold uppercase tracking-widest text-muted">This week&apos;s plant</Text>

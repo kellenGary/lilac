@@ -10,6 +10,7 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file=.env src/db/migrate.ts",
+    "db:reencrypt": "tsx --env-file=.env scripts/reencrypt-entries.ts",
     "start:prod": "tsx src/index.ts",
     "start:local": "tsx --env-file=.env src/index.ts"
   },

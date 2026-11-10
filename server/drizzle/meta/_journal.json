@@ -15,6 +15,13 @@
       "when": 1793061867350,
       "tag": "0001_closed_silhouette",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794279241765,
+      "tag": "0002_user_keys",
+      "breakpoints": true
     }
   ]
 }

@@ -64,12 +64,15 @@ export function EntryPage() {
   const older = entries[idx + 1]?.date;
   const newer = entries[idx - 1]?.date;
 
+  // Past entries are read-only: only the current day's entry can be edited.
+  const canEdit = entry.date === today;
+
   const startEdit = () => {
     setDraft(entry.text);
     setEditing(true);
   };
   const save = async () => {
-    if (!draft.trim() || saving) return;
+    if (!canEdit || !draft.trim() || saving) return;
     setSaving(true);
     setError(null);
     try {
@@ -112,7 +115,7 @@ export function EntryPage() {
                   label="Back"
                   onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
                 />
-                <Button variant="primary" label="Edit" onPress={startEdit} />
+                {canEdit && <Button variant="primary" label="Edit" onPress={startEdit} />}
               </>
             )
           }

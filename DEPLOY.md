@@ -75,6 +75,9 @@ paid Render plan before App Review so a cold start can't time out a reviewer.
 
 ## Before relying on it
 - Back up `ENTRY_ENCRYPTION_KEY` somewhere outside the database (a password manager). Losing it loses every entry.
+  Each user's own data key is stored in the database wrapped by this key, so the key and the database are both needed
+  and neither is enough alone. When upgrading to per-user keys, follow "Moving existing entries to per-user keys" in
+  [server/README.md](server/README.md): migrate first, then deploy, then re-encrypt.
 - Free-tier Supabase projects pause after a period of inactivity, and a paused project stops working. Check the current
   policy and consider the paid plan, which also adds proper backups.
 - Entry text is sent to TypeSafe for scoring. Review their data retention terms.

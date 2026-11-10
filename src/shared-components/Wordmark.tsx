@@ -8,11 +8,11 @@ export function Wordmark() {
     <Link href="/" asChild>
       <Pressable
         accessibilityRole="link"
-        accessibilityLabel="lilac pages home"
+        accessibilityLabel="Lilac Pages home"
         className="flex-row items-center hover:opacity-70"
       >
         <FaceMark size={24} />
-        <Text className="text-[19px] font-bold tracking-wide text-ink">lilac pages</Text>
+        <Text className="text-[19px] font-bold tracking-wide text-ink">Lilac Pages</Text>
       </Pressable>
     </Link>
   );

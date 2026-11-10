@@ -7,6 +7,7 @@ import { isSearching, searchEntries, snippet } from '@/lib/search';
 import { summarizeWeek } from '@/lib/summary';
 import type { Entry } from '@/lib/types';
 import { EntryRow, Plant, Reveal, Segmented } from '@/shared-components';
+import { speciesForWeek } from '@/lib/plantSpecies';
 import { useEntries } from '@/state/entries';
 import { FirstEntryPrompt } from './FirstEntryPrompt';
 import { SearchField, SearchIcon } from './SearchField';
@@ -21,7 +22,7 @@ function WeekDivider({ group }: { group: FeedGroup }) {
   return (
     <View className="flex-row items-center gap-4 border-t border-line pb-6 pt-2">
       <View className="w-28 sm:w-40" accessibilityLabel={`Plant for week ${weekNumber(group.weekStart)}`}>
-        <Plant tight state={group.plant} />
+        <Plant tight state={group.plant} species={speciesForWeek(group.weekStart)} />
       </View>
       <View className="flex-1 gap-1">
         <Text className="text-xs font-semibold uppercase tracking-widest text-muted">{label}</Text>

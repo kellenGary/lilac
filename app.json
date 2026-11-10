@@ -35,6 +35,8 @@
       "expo-router",
       "expo-status-bar",
       "expo-secure-store",
+      ["expo-notifications", { "enableRemoteNotifications": false }],
+      ["expo-local-authentication", { "faceIDPermission": "Lilac Pages uses Face ID to keep your journal private." }],
       [
         "expo-splash-screen",
         {

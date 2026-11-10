@@ -4,6 +4,7 @@ import { Text, View } from 'react-native';
 import { useTween } from '@/lib/animation';
 import { formatLong, formatShort, weekStartKey } from '@/lib/dates';
 import { plantStateForWeek, vitalityLabel } from '@/lib/plant';
+import { speciesForWeek } from '@/lib/plantSpecies';
 import { dailySeries } from '@/lib/series';
 import { SIGNALS } from '@/lib/signals';
 import { compareFeeling, feelingLabel, readAsFeeling } from '@/lib/feeling';
@@ -28,6 +29,7 @@ export function FinishPage() {
   const weekStart = entry ? weekStartKey(entry.date) : '';
   const before = plantStateForWeek(entries, weekStart, entry?.date);
   const after = plantStateForWeek(entries, weekStart);
+  const species = weekStart ? speciesForWeek(weekStart) : 'daisy';
 
   if (status !== 'ready') return <LoadingScreen />;
   if (!entry) return <Redirect href="/" />;
@@ -130,7 +132,7 @@ export function FinishPage() {
                   {change}
                 </Text>
               </View>
-              <Plant state={after} from={before} delay={3600} />
+              <Plant state={after} species={species} from={before} delay={3600} />
               <View className="mt-2.5 h-1 rounded-sm bg-track">
                 <View
                   className="h-1 rounded-sm bg-meaning"

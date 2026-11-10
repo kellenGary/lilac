@@ -7,8 +7,9 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createApp } from '../src/app';
 import type { Db } from '../src/db/client';
-import { entries, } from '../src/db/schema';
+import { entries, userKeys } from '../src/db/schema';
 import * as schema from '../src/db/schema';
+import { createVault } from '../src/vault';
 import { fakeClassify, fakeTag } from './fake-classifier';
 
 const ALICE = '11111111-1111-4111-8111-111111111111';
@@ -21,7 +22,7 @@ let classify = fakeClassify;
 
 const depsFor = () => ({
   db,
-  key: randomBytesKey,
+  vault: createVault(db, randomBytesKey),
   // Tokens are just "user:<id>" in tests.
   verifyToken: async (token: string) => {
     if (!token.startsWith('user:')) throw new Error('bad token');
@@ -57,6 +58,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   classify = fakeClassify;
   await db.delete(entries);
+  await db.delete(userKeys);
   deleteAuthUser.mockClear();
 });
 
@@ -90,7 +92,9 @@ describe('entries', () => {
     await put('2026-10-19', 'a very private thought');
     const [row] = await db.select().from(entries);
     expect(row.textEnc).not.toContain('private');
-    expect(row.highlightsEnc.startsWith('v1.')).toBe(true);
+    // New entries are sealed with the user's own key (v2), not the master key.
+    expect(row.textEnc.startsWith('v2.')).toBe(true);
+    expect(row.highlightsEnc.startsWith('v2.')).toBe(true);
   });
 
   it('editing re-scores and keeps one row per day', async () => {
@@ -154,7 +158,7 @@ describe('themes and the crisis check', () => {
 
     const [row] = await db.select().from(entries).where(eq(entries.entryDate, '2026-10-19'));
     expect(row.metaEnc).not.toContain('crisis');
-    expect(row.metaEnc?.startsWith('v1.')).toBe(true);
+    expect(row.metaEnc?.startsWith('v2.')).toBe(true);
   });
 
   it('refresh-insights tags older entries without changing their scores', async () => {

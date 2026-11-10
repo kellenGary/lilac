@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 
 import { addDays, formatLong, weekNumber, weekRangeLabel, weekStartKey } from '@/lib/dates';
 import { plantStateForWeek, vitalityLabel } from '@/lib/plant';
+import { speciesForWeek } from '@/lib/plantSpecies';
 import { dailySeries } from '@/lib/series';
 import { averageScores, SIGNALS } from '@/lib/signals';
 import { summarizeWeek } from '@/lib/summary';
@@ -67,7 +68,7 @@ export function WeekPage() {
 
           <View className="w-full max-w-[680px] items-center lg:w-[340px] lg:max-w-[340px]">
             <View className="w-72 max-w-full">
-              <Plant state={plant} sway />
+              <Plant state={plant} species={speciesForWeek(start)} sway />
             </View>
             <Text className="mt-2 text-[15px] font-semibold text-ink">{vitalityLabel(plant.vitality)}</Text>
             <Text className="text-[13px] text-muted">{inWeek.length} of 7 entries</Text>

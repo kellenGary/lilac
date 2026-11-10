@@ -17,3 +17,4 @@ export { Face } from './Face';
 export { LoadingBlock, LoadingScreen } from './Loader';
 export { LoopingPlant } from './Plant';
 export { FaceMark } from './FaceMark';
+export { LockScreen } from './LockScreen';

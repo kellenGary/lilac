@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, isNull, lte } from 'drizzle-orm';
+import { and, asc, eq, gt, gte, isNull, like, lte, or } from 'drizzle-orm';
 
 import type { Db } from './client';
 import { entries, type EntryRow } from './schema';
@@ -77,4 +77,39 @@ export async function setMeta(db: Db, userId: string, entryDate: string, metaEnc
     .update(entries)
     .set({ metaEnc })
     .where(and(eq(entries.userId, userId), eq(entries.entryDate, entryDate)));
+}
+
+/** Entries that still have a field sealed with the master key (v1), in id order, starting after `afterId`. */
+export async function listLegacyEntries(db: Db, afterId: string | undefined, limit: number): Promise<EntryRow[]> {
+  const legacy = or(like(entries.textEnc, 'v1.%'), like(entries.highlightsEnc, 'v1.%'), like(entries.metaEnc, 'v1.%'));
+  return db
+    .select()
+    .from(entries)
+    .where(afterId ? and(legacy, gt(entries.id, afterId)) : legacy)
+    .orderBy(asc(entries.id))
+    .limit(limit);
+}
+
+/**
+ * Swaps in re-sealed fields, but only if the row is still exactly as it was read. If the user edited the entry in the
+ * meantime, nothing is written (their edit is already sealed the new way) and this returns false.
+ */
+export async function replaceSealed(
+  db: Db,
+  before: EntryRow,
+  next: { textEnc: string; highlightsEnc: string; metaEnc: string | null },
+): Promise<boolean> {
+  const rows = await db
+    .update(entries)
+    .set(next)
+    .where(
+      and(
+        eq(entries.id, before.id),
+        eq(entries.textEnc, before.textEnc),
+        eq(entries.highlightsEnc, before.highlightsEnc),
+        before.metaEnc === null ? isNull(entries.metaEnc) : eq(entries.metaEnc, before.metaEnc),
+      ),
+    )
+    .returning({ id: entries.id });
+  return rows.length > 0;
 }
