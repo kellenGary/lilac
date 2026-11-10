@@ -13,14 +13,15 @@ import { upsertEntry } from '../src/db/entries-repo';
 import { loadEnv } from '../src/env';
 import { sealEntry } from '../src/entries-service';
 import { createJevClassifier } from '../src/services/jev';
+import { createVault } from '../src/vault';
 
 const email = process.argv[2]?.trim().toLowerCase();
 const days = Number(process.argv[3] ?? 150);
 if (!email || !email.includes('@')) throw new Error('Usage: seed-demo.ts <exact-email> [days]');
 
 const env = loadEnv();
-const key = parseKey(env.ENTRY_ENCRYPTION_KEY);
 const db = createDb(env.DATABASE_URL);
+const vault = createVault(db, parseKey(env.ENTRY_ENCRYPTION_KEY));
 const jev = new TypeSafeClient({ apiKey: env.JEV_API_KEY, defaultModel: env.JEV_MODEL, timeout: 30_000 });
 const classify = createJevClassifier(async (state, questions) => (await jev.systemOne({ state, questions })).answers);
 
@@ -35,6 +36,7 @@ const { users } = (await res.json()) as { users: { id: string; email?: string }[
 const matches = users.filter((u) => u.email?.toLowerCase() === email);
 if (matches.length !== 1) throw new Error(`Expected exactly one user with email ${email}, found ${matches.length}`);
 const userId = matches[0].id;
+const crypto = await vault.forWrite(userId);
 console.log(`Seeding ${email} (${userId.slice(0, 8)}…). ${users.length - 1} other account(s) left untouched.`);
 
 // ---- deterministic randomness ----
@@ -148,7 +150,7 @@ async function worker(queue: typeof plan) {
       userId,
       entryDate: item.date,
       scores,
-      ...sealEntry(userId, item.date, item.text, highlights, { themes, crisis }, null, key),
+      ...sealEntry(userId, item.date, item.text, highlights, { themes, crisis }, null, crypto),
     });
     if (++done % 20 === 0) console.log(`  ${done}/${plan.length}`);
   }

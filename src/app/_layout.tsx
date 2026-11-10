@@ -9,9 +9,15 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LoadingScreen } from '@/shared-components';
 import { AuthProvider, useAuth } from '@/state/auth';
 import { ConsentProvider, useConsent } from '@/state/consent';
+import { AppLockProvider } from '@/state/lock';
 import { EntriesProvider } from '@/state/entries';
+import { RemindersProvider } from '@/state/reminders';
 import { TransitionProvider } from '@/state/transition';
 import { ThemeProvider, useTheme } from '@/state/theme';
+
+// Expo Router sorts screens itself, ignoring declaration order, and falls back to the first one the guards allow.
+// Alphabetically that is "privacy", so name sign-in as the first choice for a signed-out user.
+export const unstable_settings = { initialRouteName: 'sign-in' };
 
 function ThemedStatusBar() {
   return <StatusBar style={useTheme().isDark ? 'light' : 'dark'} />;
@@ -62,14 +68,18 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <ConsentProvider>
-            <EntriesProvider>
-              <TransitionProvider>
-                <Routes />
-                <ThemedStatusBar />
-              </TransitionProvider>
-            </EntriesProvider>
-          </ConsentProvider>
+          <AppLockProvider>
+            <ConsentProvider>
+              <EntriesProvider>
+                <RemindersProvider>
+                  <TransitionProvider>
+                    <Routes />
+                    <ThemedStatusBar />
+                  </TransitionProvider>
+                </RemindersProvider>
+              </EntriesProvider>
+            </ConsentProvider>
+          </AppLockProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>

@@ -1,13 +1,16 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Platform, Pressable, Text, TextInput, View, type TextStyle } from 'react-native';
+import { Linking, Platform, Pressable, Text, TextInput, View, type TextStyle } from 'react-native';
 
 import { saveFile } from '@/lib/download';
+import { REMINDER_TIMES } from '@/lib/reminders';
 import { weekStartKey } from '@/lib/dates';
 import { api } from '@/services/api';
 import { Button, Column, Container, PageHeader, Reveal, Screen, Segmented, Switch } from '@/shared-components';
 import { useAuth } from '@/state/auth';
 import { useEntries } from '@/state/entries';
+import { useAppLock } from '@/state/lock';
+import { useReminders } from '@/state/reminders';
 import { useTheme } from '@/state/theme';
 import { PHASE_LABEL } from '@/theme/palettes';
 import { Card, Row, Stat } from './components/parts';
@@ -22,6 +25,10 @@ export function SettingsPage() {
   const { session, signOut } = useAuth();
   const { entries, streak, reload } = useEntries();
   const { appearance, setAppearance, timeOfDay, setTimeOfDay, phase } = useTheme();
+  const reminders = useReminders();
+  const lock = useAppLock();
+  const [lockNote, setLockNote] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState(false);
   const [busy, setBusy] = useState<null | 'export' | 'refresh' | 'delete'>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -108,10 +115,13 @@ export function SettingsPage() {
               <Card title="Appearance">
                 <Row
                   first
+                  icon="contrast"
+                  tint="sun"
                   title="Theme"
                   description="Light, dark, or whatever your device is set to."
-                  action={
+                  below={
                     <Segmented
+                      fill
                       value={appearance}
                       onChange={setAppearance}
                       options={[
@@ -123,11 +133,13 @@ export function SettingsPage() {
                   }
                 />
                 <Row
+                  icon="clock"
+                  tint="sage"
                   title="Shift with the time of day"
                   description={
                     phase
-                      ? `Colors follow the light outside: warmer at golden hour, softer at night. ${PHASE_LABEL[phase]} are showing now.`
-                      : 'Colors follow the light outside: fresh in the morning, warmer at golden hour, softer at night.'
+                      ? `Warmer at golden hour, softer at night. ${PHASE_LABEL[phase]} are showing now.`
+                      : 'Fresh in the morning, warmer at golden hour, softer at night.'
                   }
                   action={
                     <Switch
@@ -140,32 +152,106 @@ export function SettingsPage() {
               </Card>
             </Reveal>
 
+            {reminders.supported && (
+              <Reveal delay={90}>
+                <Card title="Reminders">
+                  <Row
+                    first
+                    icon="bell"
+                    tint="sun"
+                    title="Daily reminder"
+                    description="A gentle nudge to write. It skips days you have already written."
+                    action={
+                      <Switch
+                        accessibilityLabel="Daily reminder"
+                        value={reminders.prefs.enabled && reminders.permission === 'granted'}
+                        onChange={async (on) => setBlocked(!(await reminders.setEnabled(on)))}
+                      />
+                    }
+                  />
+                  {reminders.prefs.enabled && reminders.permission === 'granted' && (
+                    <Row
+                      icon="clock"
+                      tint="sage"
+                      title="Remind me at"
+                      below={
+                        <Segmented
+                          fill
+                          value={String(reminders.prefs.hour)}
+                          onChange={(h) => reminders.setHour(Number(h))}
+                          options={REMINDER_TIMES.map((t) => ({ value: String(t.hour), label: t.label }))}
+                        />
+                      }
+                    />
+                  )}
+                  {(blocked || (reminders.prefs.enabled && reminders.permission === 'denied')) && (
+                    <Row
+                      icon="bell"
+                      tint="rose"
+                      title="Notifications are off"
+                      description="Allow notifications for Lilac Pages in your device settings to get reminders."
+                      onPress={() => Linking.openSettings()}
+                    />
+                  )}
+                </Card>
+              </Reveal>
+            )}
+
+            {lock.supported && (
+              <Reveal delay={100}>
+                <Card title="Privacy">
+                  <Row
+                    first
+                    icon="lock"
+                    tint="sage"
+                    title="App lock"
+                    description="Ask for Face ID or your device passcode when you open Lilac Pages."
+                    action={
+                      <Switch
+                        accessibilityLabel="App lock"
+                        value={lock.enabled}
+                        onChange={async (on) => {
+                          const result = await lock.setEnabled(on);
+                          setLockNote(
+                            result === 'unavailable'
+                              ? 'Set a passcode or Face ID on your device first, then turn this on.'
+                              : null,
+                          );
+                        }}
+                      />
+                    }
+                  />
+                  {lockNote && (
+                    <View className="border-t border-line bg-sage px-5 py-3">
+                      <Text accessibilityRole="alert" className="text-sm text-sageInk">
+                        {lockNote}
+                      </Text>
+                    </View>
+                  )}
+                </Card>
+              </Reveal>
+            )}
+
             <Reveal delay={120}>
               <Card title="Your data">
                 <Row
                   first
+                  icon="download"
+                  tint="sage"
                   title="Download my data"
                   description="Everything you have written, with its scores, as a file you keep."
-                  action={
-                    <Button
-                      variant="ghost"
-                      label={busy === 'export' ? 'Preparing…' : 'Download'}
-                      onPress={exportData}
-                      disabled={!!busy}
-                    />
-                  }
+                  value={busy === 'export' ? 'Preparing…' : undefined}
+                  onPress={exportData}
+                  disabled={!!busy}
                 />
                 <Row
+                  icon="refresh"
+                  tint="track"
                   title="Update older entries"
-                  description="Reads entries written before themes existed to find their themes. Their scores do not change."
-                  action={
-                    <Button
-                      variant="ghost"
-                      label={busy === 'refresh' ? 'Working…' : 'Update'}
-                      onPress={refresh}
-                      disabled={!!busy}
-                    />
-                  }
+                  description="Finds themes in entries written before themes existed. Their scores do not change."
+                  value={busy === 'refresh' ? 'Working…' : undefined}
+                  onPress={refresh}
+                  disabled={!!busy}
                 />
                 {message && (
                   <View className="border-t border-line bg-sage px-5 py-3">
@@ -181,9 +267,11 @@ export function SettingsPage() {
               <Card title="Account">
                 <Row
                   first
+                  icon="logout"
+                  tint="track"
                   title="Sign out"
                   description="Sign out on this device. Your journal stays safe."
-                  action={<Button variant="ghost" label="Sign out" onPress={signOut} />}
+                  onPress={signOut}
                 />
               </Card>
             </Reveal>
@@ -192,13 +280,13 @@ export function SettingsPage() {
               <Card title="Danger zone" tone="danger">
                 <Row
                   first
+                  danger
+                  icon="trash"
+                  tint="rose"
                   title="Delete my account"
                   description="Permanently deletes your account and every entry. This cannot be undone. Download your data first if you want to keep it."
-                  action={
-                    !confirming ? (
-                      <Button variant="ghost" label="Delete…" onPress={() => setConfirming(true)} disabled={!!busy} />
-                    ) : undefined
-                  }
+                  onPress={confirming ? undefined : () => setConfirming(true)}
+                  disabled={!!busy}
                 />
                 {confirming && (
                   <View className="gap-3 border-t border-roseLine px-5 py-5">

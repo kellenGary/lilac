@@ -1,62 +1,39 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, Ellipse, G, Line, Path } from 'react-native-svg';
+import Svg, { ClipPath, Circle, Defs, Ellipse, G, Line, Path, Rect } from 'react-native-svg';
 
 import { useLoop, useSway, useTweenedNumber } from '@/lib/animation';
 import { vitalityLabel, type PlantState } from '@/lib/plant';
+import { SPECIES_NAME, type PlantSpecies } from '@/lib/plantSpecies';
 import { colors } from '@/theme/colors';
-import { useColors, useTheme } from '@/state/theme';
+import { useColors } from '@/state/theme';
+import { CactusBody } from './plants/Cactus';
+import { FernBody, FernFront } from './plants/Fern';
+import { MonsteraBody } from './plants/Monstera';
+import { SucculentBody } from './plants/Succulent';
+import { TulipBody } from './plants/Tulip';
+import {
+  clamp01,
+  f,
+  ink,
+  mix,
+  stemX,
+  stemY,
+  useTone,
+  wilt,
+  type BodyProps,
+  type Live,
+} from './plants/shared';
 
 /*
- * The week's plant, drawn procedurally from four 0-1 values:
- *   growth  -> stem height, number and size of leaves, buds and blooms
- *   tension -> (anxiety) narrower, more upright, creased leaves; a kinked stem; a faster, jumpier sway
- *   droop   -> (depression) leaves hang, yellow then brown at the tips, the stem bows, lower leaves drop
- *   carry   -> (last week) sturdier stem, richer soil, a new shoot at the base
+ * The week's plant, drawn procedurally from four 0-1 values (see plants/shared.tsx for what each does). The Daisy,
+ * below, is the original: a branching stem with paired leaves and a flower. The other species live in ./plants and
+ * read the same four values, so every plant grows, tenses and wilts in its own way. The pot and soil are shared.
  * All coordinates are in a 300x220 viewBox; the stem base sits at (150, 176).
  */
 
-/** Outlines and veins are always this dark ink, so a plant looks the same in light and dark mode. */
-const ink = colors.ink;
-
-/** How far dark mode pulls the fills toward the page color: 0 is identical to light mode. A touch takes the glare off. */
-const DARK_DIM = 0.18;
-
-const GROUND = 176;
 const MAX_H = 148;
 const NODES = 10;
-
-const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
-const f = (n: number) => n.toFixed(1);
-
-function mix(a: string, b: string, t: number): string {
-  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
-  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
-  return `#${pa
-    .map((c, i) =>
-      Math.round(c + (pb[i] - c) * clamp01(t))
-        .toString(16)
-        .padStart(2, '0'),
-    )
-    .join('')}`;
-}
-
-/** Fills keep their colors in dark mode, softened slightly (see DARK_DIM). */
-function useTone(): (hex: string) => string {
-  const { isDark, palette } = useTheme();
-  return (hex) => (isDark ? mix(hex, palette.cream, DARK_DIM) : hex);
-}
-
-/** Healthy green -> yellow -> brown as droop rises. */
-function wilt(base: string, droop: number): string {
-  return mix(mix(base, '#D9CC82', droop * 1.6), '#B8976A', (droop - 0.55) * 2);
-}
-
-const stemX = (h: number, tension: number, droop: number) => {
-  const u = h / MAX_H;
-  return 150 + 7 * Math.sin(u * 3.1) + droop * 34 * u * u + tension * 2.6 * Math.sin(u * 31) * u;
-};
-const stemY = (h: number) => GROUND - h;
 
 type LeafProps = {
   x: number;
@@ -198,16 +175,12 @@ function Bud({ x, y, s }: { x: number; y: number; s: number }) {
   );
 }
 
-type Live = Omit<PlantState, 'vitality'>;
-
-function PlantDrawing({ growth: g, tension: a, droop: d, carry: c, tight }: Live & { tight?: boolean }) {
-  const { track } = useColors();
+function DaisyBody({ growth: g, tension: a, droop: d, carry: c, lost }: BodyProps) {
   const tone = useTone();
   const H = 34 + (MAX_H - 34) * g;
   const size = 0.62 + 0.45 * g;
   const stemColor = mix('#98B27A', '#C9B88A', d);
   const stemW = 1.8 + 2.2 * c;
-  const lost = d < 0.3 ? 0 : Math.min(3, Math.ceil(((d - 0.3) / 0.7) * 3));
 
   const px = (h: number) => stemX(h, a, d);
   const stemPoints: [number, number][] = [];
@@ -303,80 +276,8 @@ function PlantDrawing({ growth: g, tension: a, droop: d, carry: c, tight }: Live
     );
   }
 
-  const soil = mix('#B39B76', '#6E5A3E', c);
-  const shootFr = clamp01((c - 0.45) / 0.3);
-  const fallen = [
-    { x: 92, y: 206, rot: 8, side: 1 as const },
-    { x: 214, y: 207, rot: 172, side: -1 as const },
-    { x: 76, y: 208, rot: -14, side: 1 as const },
-  ].slice(0, lost);
-
   return (
-    <Svg
-      width="100%"
-      viewBox={tight ? '52 0 200 214' : '0 0 300 220'}
-      style={{ aspectRatio: tight ? 200 / 214 : 300 / 220 }}
-      accessibilityLabel={`Plant for the week, ${vitalityLabel(g).toLowerCase()}`}
-    >
-      <Ellipse cx={150} cy={209} rx={64} ry={5} fill={track} />
-      {fallen.map((l, i) => (
-        <Leaf key={`f${i}`} x={l.x} y={l.y} rot={l.rot} len={26} side={l.side} fill="#B8976A" droop={0.9} tension={0} />
-      ))}
-
-      {/* pot */}
-      <Path d="M114 178h72l-8 30h-56z" fill={tone(colors.pot)} stroke={ink} strokeWidth={1.2} strokeLinejoin="round" />
-      <Path d="M170 181 L186 181 L178 208 L168 208Z" fill={ink} opacity={0.07} />
-      <Line x1={122} y1={184} x2={127} y2={205} stroke="#FFFBEF" strokeWidth={2} strokeLinecap="round" opacity={0.7} />
-      <Path d="M119 191h62M121 198h58" stroke={ink} strokeWidth={0.6} opacity={0.3} />
-      <Path d="M109 172h82v9h-82z" fill={tone(colors.potRim)} stroke={ink} strokeWidth={1.2} strokeLinejoin="round" />
-      <Path d="M109 177h82" stroke={ink} strokeWidth={0.5} opacity={0.3} />
-      {/* soil */}
-      <Ellipse cx={150} cy={173} rx={37} ry={4.5} fill={tone(soil)} stroke={ink} strokeWidth={0.9} />
-      {[
-        [128, 173],
-        [136, 175],
-        [143, 172],
-        [161, 175],
-        [170, 173],
-        [177, 174],
-        [152, 176],
-      ].map(([x, y], i) => (
-        <Circle key={i} cx={x} cy={y} r={0.9} fill={ink} opacity={0.35} />
-      ))}
-
-      {/* new shoot at the base, from a strong last week */}
-      {shootFr > 0 && (
-        <G>
-          <Path
-            d={`M128 173 Q127 ${f(173 - 10 * shootFr)} ${f(130 - 2 * shootFr)} ${f(173 - 17 * shootFr)}`}
-            fill="none"
-            stroke={ink}
-            strokeWidth={1.1}
-            strokeLinecap="round"
-          />
-          <Leaf
-            x={129}
-            y={173 - 14 * shootFr}
-            rot={-150}
-            len={13 * shootFr}
-            side={-1}
-            fill={colors.leafNew}
-            droop={0}
-            tension={0}
-          />
-          <Leaf
-            x={129}
-            y={173 - 14 * shootFr}
-            rot={-35}
-            len={13 * shootFr}
-            side={1}
-            fill={colors.leafLight}
-            droop={0}
-            tension={0}
-          />
-        </G>
-      )}
-
+    <G>
       {/* stem: ink outline, then colour; thinner toward the top */}
       <Path
         d={toPath(stemPoints.slice(0, split))}
@@ -414,6 +315,129 @@ function PlantDrawing({ growth: g, tension: a, droop: d, carry: c, tight }: Live
       {branches}
       {leaves}
       {crown}
+    </G>
+  );
+}
+
+const STEMMED = new Set<PlantSpecies>(['daisy', 'tulip', 'cactus', 'fern']);
+
+/** Parts drawn after the front of the pot, so they can hang over the rim (the fern's leaves). */
+const FRONTS: Partial<Record<PlantSpecies, (p: BodyProps) => ReactNode>> = { fern: FernFront };
+
+const BODIES: Record<PlantSpecies, (p: BodyProps) => ReactNode> = {
+  daisy: DaisyBody,
+  fern: FernBody,
+  succulent: SucculentBody,
+  tulip: TulipBody,
+  monstera: MonsteraBody,
+  cactus: CactusBody,
+};
+
+function PlantDrawing({
+  growth: g,
+  tension: a,
+  droop: d,
+  carry: c,
+  species,
+  tight,
+}: Live & { species: PlantSpecies; tight?: boolean }) {
+  const { track } = useColors();
+  const tone = useTone();
+  const Body = BODIES[species];
+  const Front = FRONTS[species];
+  const lost = d < 0.3 ? 0 : Math.min(3, Math.ceil(((d - 0.3) / 0.7) * 3));
+  const soil = mix('#B39B76', '#6E5A3E', c);
+  const shootFr = clamp01((c - 0.45) / 0.3);
+  const fallen = [
+    { x: 92, y: 206, rot: 8, side: 1 as const },
+    { x: 214, y: 207, rot: 172, side: -1 as const },
+    { x: 76, y: 208, rot: -14, side: 1 as const },
+  ].slice(0, lost);
+
+  const pot = (
+    <>
+      {/* pot */}
+      <Path d="M114 178h72l-8 30h-56z" fill={tone(colors.pot)} stroke={ink} strokeWidth={1.2} strokeLinejoin="round" />
+      <Path d="M170 181 L186 181 L178 208 L168 208Z" fill={ink} opacity={0.07} />
+      <Line x1={122} y1={184} x2={127} y2={205} stroke="#FFFBEF" strokeWidth={2} strokeLinecap="round" opacity={0.7} />
+      <Path d="M119 191h62M121 198h58" stroke={ink} strokeWidth={0.6} opacity={0.3} />
+      <Path d="M109 172h82v9h-82z" fill={tone(colors.potRim)} stroke={ink} strokeWidth={1.2} strokeLinejoin="round" />
+      <Path d="M109 177h82" stroke={ink} strokeWidth={0.5} opacity={0.3} />
+      {/* soil */}
+      <Ellipse cx={150} cy={173} rx={37} ry={4.5} fill={tone(soil)} stroke={ink} strokeWidth={0.9} />
+      {[
+        [128, 173],
+        [136, 175],
+        [143, 172],
+        [161, 175],
+        [170, 173],
+        [177, 174],
+        [152, 176],
+      ].map(([x, y], i) => (
+        <Circle key={i} cx={x} cy={y} r={0.9} fill={ink} opacity={0.35} />
+      ))}
+    </>
+  );
+
+  return (
+    <Svg
+      width="100%"
+      viewBox={tight ? '52 0 200 214' : '0 0 300 220'}
+      style={{ aspectRatio: tight ? 200 / 214 : 300 / 220 }}
+      accessibilityLabel={`${SPECIES_NAME[species]} for the week, ${vitalityLabel(g).toLowerCase()}`}
+    >
+      <Defs>
+        <ClipPath id="soil-line">
+          <Rect x={0} y={174.5} width={300} height={60} />
+        </ClipPath>
+      </Defs>
+      <Ellipse cx={150} cy={209} rx={64} ry={5} fill={track} />
+      {fallen.map((l, i) => (
+        <Leaf key={`f${i}`} x={l.x} y={l.y} rot={l.rot} len={26} side={l.side} fill="#B8976A" droop={0.9} tension={0} />
+      ))}
+
+      {pot}
+
+      {/* new shoot at the base, from a strong last week */}
+      {shootFr > 0 && (
+        <G>
+          <Path
+            d={`M128 173 Q127 ${f(173 - 10 * shootFr)} ${f(130 - 2 * shootFr)} ${f(173 - 17 * shootFr)}`}
+            fill="none"
+            stroke={ink}
+            strokeWidth={1.1}
+            strokeLinecap="round"
+          />
+          <Leaf
+            x={129}
+            y={173 - 14 * shootFr}
+            rot={-150}
+            len={13 * shootFr}
+            side={-1}
+            fill={colors.leafNew}
+            droop={0}
+            tension={0}
+          />
+          <Leaf
+            x={129}
+            y={173 - 14 * shootFr}
+            rot={-35}
+            len={13 * shootFr}
+            side={1}
+            fill={colors.leafLight}
+            droop={0}
+            tension={0}
+          />
+        </G>
+      )}
+
+      <Body growth={g} tension={a} droop={d} carry={c} lost={lost} />
+
+      {/* For plants on a single stem or trunk: the pot and soil again, only below the soil line and over the plant, so
+          it rises out of the soil. Plants with no single stem (succulent, monstera) skip this: their leaves drape over the
+          rim. The fern has both: stems in the soil, then its leaves drawn on top. */}
+      {STEMMED.has(species) && <G clipPath="url(#soil-line)">{pot}</G>}
+      {Front && <Front growth={g} tension={a} droop={d} carry={c} lost={lost} />}
     </Svg>
   );
 }
@@ -426,6 +450,8 @@ function Swaying({ tension, children }: { tension: number; children: ReactNode }
 
 type PlantProps = {
   state: PlantState;
+  /** Which plant to draw (see `speciesForWeek`). Defaults to the daisy. */
+  species?: PlantSpecies;
   /** Start from this state and animate to `state` (e.g. "before today's entry"). */
   from?: PlantState;
   /** ms before animating from `from` to `state`. */
@@ -437,12 +463,14 @@ type PlantProps = {
 };
 
 /** Botanical line drawing of a week's plant. Every value eases to its new state, so it grows and wilts visibly. */
-export function Plant({ state, from, delay = 0, sway, tight }: PlantProps) {
+export function Plant({ state, species = 'daisy', from, delay = 0, sway, tight }: PlantProps) {
   const growth = useTweenedNumber(state.growth, 1400, delay, from?.growth);
   const tension = useTweenedNumber(state.tension, 1400, delay, from?.tension);
   const droop = useTweenedNumber(state.droop, 1400, delay, from?.droop);
   const carry = useTweenedNumber(state.carry, 1400, delay, from?.carry);
-  const drawing = <PlantDrawing growth={growth} tension={tension} droop={droop} carry={carry} tight={tight} />;
+  const drawing = (
+    <PlantDrawing growth={growth} tension={tension} droop={droop} carry={carry} species={species} tight={tight} />
+  );
   return sway ? <Swaying tension={tension}>{drawing}</Swaying> : drawing;
 }
 
@@ -455,7 +483,7 @@ export function LoopingPlant() {
   const breath = 0.5 - 0.5 * Math.cos(phase * 2 * Math.PI); // 0 -> 1 -> 0, easing at both ends
   return (
     <Swaying tension={0}>
-      <PlantDrawing growth={0.1 + 0.82 * breath} tension={0} droop={0} carry={0.6} tight />
+      <PlantDrawing growth={0.1 + 0.82 * breath} tension={0} droop={0} carry={0.6} species="daisy" tight />
     </Swaying>
   );
 }

@@ -12,11 +12,12 @@ import { deleteAllEntries, deleteEntry, getEntry, listEntries, upsertEntry } fro
 import { openEntry, openMeta, sealEntry } from './entries-service';
 import { backfillMeta } from './backfill';
 import type { Classify, Tag } from './services/jev';
+import type { Vault } from './vault';
 
 export type AppDeps = {
   db: Db;
-  /** 32-byte AES key for entry text. */
-  key: Buffer;
+  /** Holds each user's encryption key. */
+  vault: Vault;
   verifyToken: VerifyToken;
   deleteAuthUser: DeleteAuthUser;
   classify: Classify;
@@ -38,7 +39,7 @@ const dateKey = z
 const MAX_TEXT = 20_000;
 
 export function createApp(deps: AppDeps) {
-  const { db, key, verifyToken, deleteAuthUser, classify, tag } = deps;
+  const { db, vault, verifyToken, deleteAuthUser, classify, tag } = deps;
   const now = deps.now ?? (() => new Date());
   const app = new Hono<Vars>();
 
@@ -74,13 +75,16 @@ export function createApp(deps: AppDeps) {
   });
 
   app.get('/v1/entries', zValidator('query', z.object({ from: dateKey.optional(), to: dateKey.optional() })), async (c) => {
-    const rows = await listEntries(db, c.get('userId'), c.req.valid('query'));
-    return c.json({ entries: rows.map((r) => openEntry(r, key)) });
+    const userId = c.get('userId');
+    const rows = await listEntries(db, userId, c.req.valid('query'));
+    const crypto = await vault.forRead(userId);
+    return c.json({ entries: rows.map((r) => openEntry(r, crypto)) });
   });
 
   app.get('/v1/entries/:date', zValidator('param', z.object({ date: dateKey })), async (c) => {
-    const row = await getEntry(db, c.get('userId'), c.req.valid('param').date);
-    return row ? c.json(openEntry(row, key)) : c.json({ error: 'not found' }, 404);
+    const userId = c.get('userId');
+    const row = await getEntry(db, userId, c.req.valid('param').date);
+    return row ? c.json(openEntry(row, await vault.forRead(userId))) : c.json({ error: 'not found' }, 404);
   });
 
   // Create or edit. Either way the text is (re-)scored, so scores always match what was written.
@@ -112,16 +116,17 @@ export function createApp(deps: AppDeps) {
         console.error(`scoring failed:\n${describeError(err)}`);
         return c.json({ error: 'scoring_unavailable' }, 502);
       }
+      const crypto = await vault.forWrite(userId);
       const existing = await getEntry(db, userId, date);
-      const feeling = chosen !== undefined ? chosen : existing ? openMeta(existing, key).feeling : null;
+      const feeling = chosen !== undefined ? chosen : existing ? openMeta(existing, crypto).feeling : null;
       const { scores, highlights, themes, crisis } = classification;
       const row = await upsertEntry(db, {
         userId,
         entryDate: date,
         scores,
-        ...sealEntry(userId, date, text, highlights, { themes, crisis }, feeling, key),
+        ...sealEntry(userId, date, text, highlights, { themes, crisis }, feeling, crypto),
       });
-      return c.json(openEntry(row, key));
+      return c.json(openEntry(row, crypto));
     },
   );
 
@@ -133,7 +138,8 @@ export function createApp(deps: AppDeps) {
   // Tag older entries with themes and the crisis check. Call again while `more` is true.
   app.post('/v1/refresh-insights', async (c) => {
     try {
-      return c.json(await backfillMeta(db, c.get('userId'), key, tag));
+      const userId = c.get('userId');
+      return c.json(await backfillMeta(db, userId, await vault.forWrite(userId), tag));
     } catch (err) {
       console.error(`refresh failed:\n${describeError(err)}`);
       return c.json({ error: 'scoring_unavailable' }, 502);
@@ -142,15 +148,19 @@ export function createApp(deps: AppDeps) {
 
   // Everything we hold about the user, as JSON.
   app.get('/v1/export', async (c) => {
-    const rows = await listEntries(db, c.get('userId'));
+    const userId = c.get('userId');
+    const rows = await listEntries(db, userId);
+    const crypto = await vault.forRead(userId);
     c.header('Content-Disposition', 'attachment; filename="lilac-pages-export.json"');
-    return c.json({ exportedAt: now().toISOString(), entries: rows.map((r) => openEntry(r, key)) });
+    return c.json({ exportedAt: now().toISOString(), entries: rows.map((r) => openEntry(r, crypto)) });
   });
 
-  // Account deletion: entries first, then the login. Safe to retry if the second step fails.
+  // Account deletion: entries, then the user's encryption key (so any copy of their data, in backups too, can never
+  // be read again), then the login. Every step is safe to repeat if a later one fails.
   app.delete('/v1/me', async (c) => {
     const userId = c.get('userId');
     await deleteAllEntries(db, userId);
+    await vault.forget(userId);
     await deleteAuthUser(userId);
     return c.body(null, 204);
   });

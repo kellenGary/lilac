@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { weekNumber, weekRangeLabel, weekStartKey } from '@/lib/dates';
 import { plantStateForWeek, vitalityLabel } from '@/lib/plant';
+import { speciesForWeek } from '@/lib/plantSpecies';
 import { Container, PageHeader, Plant, Reveal, Screen, LoadingScreen } from '@/shared-components';
 import { useEntries } from '@/state/entries';
 
@@ -47,7 +48,7 @@ export function GardenPage() {
                     className="items-center rounded-3xl bg-surface px-3 pb-4 pt-3 hover:opacity-80"
                   >
                     <View className="w-full max-w-[180px]">
-                      <Plant tight state={w.plant} />
+                      <Plant tight state={w.plant} species={speciesForWeek(w.start)} />
                     </View>
                     <Text className="mt-2 text-sm font-semibold text-ink">Week {weekNumber(w.start)}</Text>
                     <Text className="text-xs text-muted">{weekRangeLabel(w.start)}</Text>
