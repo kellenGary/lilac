@@ -46,7 +46,7 @@ export function SettingsPage() {
   const exportData = () =>
     run('export', async () => {
       const data = await api.exportData();
-      await saveFile('lilac-export.json', JSON.stringify(data, null, 2));
+      await saveFile('lilac-pages-export.json', JSON.stringify(data, null, 2));
       setMessage(`Exported ${data.entries.length} entries.`);
     });
 

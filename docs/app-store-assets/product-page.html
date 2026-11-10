@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<!-- Source for the App Store Connect product page assets. Render with render.sh. Size via ?w=3840&h=1646 -->
+<style>
+  :root { --cream:#F8F3E6; --ink:#2A2A24; --body:#4A4A3E; }
+  * { margin:0; box-sizing:border-box; }
+  html, body { width:100vw; height:100vh; overflow:hidden; background:var(--cream); }
+  body { position:relative; font-family:-apple-system,"SF Pro Display","Helvetica Neue",sans-serif; display:flex; align-items:center; justify-content:center; }
+  .blob { position:absolute; border-radius:50%; filter:blur(8vh); opacity:.85; }
+  .a { background:#D9CCEA; width:62vh; height:62vh; left:calc(50% - 74vh); top:-14vh; }
+  .b { background:#CFDDB8; width:54vh; height:54vh; left:calc(50% + 34vh); top:calc(50% - 6vh); }
+  .c { background:#F2C9A0; width:46vh; height:46vh; left:calc(50% + 30vh); top:-12vh; opacity:.7; }
+  .d { background:#F1E1A0; width:44vh; height:44vh; left:calc(50% - 62vh); top:calc(50% + 12vh); opacity:.75; }
+  .lockup { position:relative; display:flex; flex-direction:column; align-items:center; gap:4.2vh; }
+  .mark { width:24vh; height:24vh; }
+  .name { font-size:11vh; font-weight:700; letter-spacing:.02em; color:var(--ink); }
+  .tag { font-size:4.4vh; color:var(--body); letter-spacing:.01em; }
+</style>
+<div class="blob a"></div><div class="blob b"></div><div class="blob c"></div><div class="blob d"></div>
+<div class="lockup">
+  <svg class="mark" viewBox="0 0 24 24" fill="none">
+    <circle cx="8.4" cy="5.73" r="2" fill="#2A2A24"/><circle cx="15.6" cy="5.73" r="2" fill="#2A2A24"/>
+    <path d="M6 13.77 C8 9.17 16 9.17 18 13.77" stroke="#2A2A24" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="8.4" cy="18.27" r="2" fill="#2A2A24"/><circle cx="15.6" cy="18.27" r="2" fill="#2A2A24"/>
+  </svg>
+  <div class="name">lilac pages</div>
+  <div class="tag">A quiet place to write about your day</div>
+</div>

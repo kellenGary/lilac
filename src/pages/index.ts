@@ -10,3 +10,4 @@ export { SettingsPage } from './Settings';
 export { WeekPage } from './Week';
 export { ConsentPage } from './Consent';
 export { PrivacyPage } from './Privacy';
+export { SupportPage } from './Support';

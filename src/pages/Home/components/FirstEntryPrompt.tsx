@@ -10,7 +10,7 @@ export function FirstEntryPrompt() {
     <Reveal delay={150}>
       <View className="max-w-[560px] gap-4 border-t border-line pt-6">
         <Text accessibilityRole="header" className="text-2xl font-bold tracking-tight text-ink">
-          Welcome to reflex
+          Welcome to Lilac Pages
         </Text>
         <Text className="text-base leading-6 text-body">
           Your journal is empty, which is a good place to start. Write a few lines about today, however it went.

@@ -40,7 +40,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
   },
   {
     title: 'Children',
-    body: ['lilac is not intended for children under 13, and we do not knowingly collect their data.'],
+    body: ['Lilac Pages is not intended for children under 13, and we do not knowingly collect their data.'],
   },
   {
     title: 'Changes',

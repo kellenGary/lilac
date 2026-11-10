@@ -48,7 +48,7 @@ export function ConsentPage() {
                 Before you begin
               </Text>
               <Text className="mt-3 text-lg leading-7 text-body">
-                lilac works by reading what you write. Here is what that means.
+                Lilac Pages works by reading what you write. Here is what that means.
               </Text>
             </Reveal>
 

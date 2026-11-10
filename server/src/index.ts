@@ -30,4 +30,4 @@ const app = createApp({
   corsOrigins,
 });
 
-serve({ fetch: app.fetch, port: env.PORT }, ({ port }) => console.log(`reflex-server listening on :${port}`));
+serve({ fetch: app.fetch, port: env.PORT }, ({ port }) => console.log(`lilac-server listening on :${port}`));

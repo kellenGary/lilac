@@ -1,6 +1,6 @@
-# reflex-server
+# lilac-server
 
-TypeScript API for the Reflex app: Hono, Postgres (Drizzle), Supabase Auth.
+TypeScript API for the Lilac Pages app: Hono, Postgres (Drizzle), Supabase Auth.
 
 ```
 app (Expo)  --Bearer <Supabase access token>-->  this API  -->  Postgres (Supabase)

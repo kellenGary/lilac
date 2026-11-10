@@ -60,7 +60,7 @@ export function HomePage() {
               <>
                 <Text className="max-w-[420px] text-center text-base leading-6 text-body">
                   {errorKind === 'network'
-                    ? "We can't reach the reflex server."
+                    ? "We can't reach the Lilac Pages server."
                     : errorKind === 'auth'
                       ? 'Your session has expired. Please sign in again.'
                       : "We couldn't load your journal."}

@@ -84,7 +84,7 @@ export function SignInPage() {
                 </Reveal>
                 <Reveal delay={350}>
                   <Text className="mt-4 max-w-[460px] text-base leading-6 text-body lg:text-lg lg:leading-7">
-                    Write a little each day. reflex reads what you wrote and shows how your mood and sense of meaning
+                    Write a little each day. Lilac Pages reads what you wrote and shows how your mood and sense of meaning
                     move over time, and grows a plant from it.
                   </Text>
                 </Reveal>

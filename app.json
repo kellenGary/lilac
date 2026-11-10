@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "lilac",
-    "slug": "reflex",
+    "name": "Lilac Pages",
+    "slug": "lilac-pages",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -49,6 +49,6 @@
         }
       ]
     ],
-    "scheme": "reflex"
+    "scheme": "lilac"
   }
 }

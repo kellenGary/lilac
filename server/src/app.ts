@@ -143,7 +143,7 @@ export function createApp(deps: AppDeps) {
   // Everything we hold about the user, as JSON.
   app.get('/v1/export', async (c) => {
     const rows = await listEntries(db, c.get('userId'));
-    c.header('Content-Disposition', 'attachment; filename="reflex-export.json"');
+    c.header('Content-Disposition', 'attachment; filename="lilac-pages-export.json"');
     return c.json({ exportedAt: now().toISOString(), entries: rows.map((r) => openEntry(r, key)) });
   });
 

@@ -4,8 +4,8 @@ import { parseOrigins } from '../src/env';
 
 describe('parseOrigins', () => {
   it('trims spaces and trailing slashes', () => {
-    expect(parseOrigins(' https://reflex.vercel.app/ , http://localhost:8081 ')).toEqual([
-      'https://reflex.vercel.app',
+    expect(parseOrigins(' https://lilac.vercel.app/ , http://localhost:8081 ')).toEqual([
+      'https://lilac.vercel.app',
       'http://localhost:8081',
     ]);
   });

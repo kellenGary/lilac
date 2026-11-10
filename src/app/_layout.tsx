@@ -1,6 +1,7 @@
 import '../../global.css';
 
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import { useEffect, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -20,6 +21,15 @@ function Routes() {
   const { session, loading } = useAuth();
   const { palette } = useTheme();
   const consent = useConsent();
+  const router = useRouter();
+  const hadSession = useRef(false);
+  // When the guards drop every screen the user was on, the stack falls back to a screen that is always available
+  // (privacy). Send a signed-out user to sign-in explicitly instead.
+  useEffect(() => {
+    if (loading) return;
+    if (hadSession.current && !session) router.replace('/sign-in');
+    hadSession.current = !!session;
+  }, [session, loading, router]);
   if (loading || (session && !consent.ready)) return <LoadingScreen />; // reading the stored session; avoids flashing the sign-in screen
 
   return (
@@ -42,6 +52,7 @@ function Routes() {
         <Stack.Screen name="sign-in" />
       </Stack.Protected>
       <Stack.Screen name="privacy" />
+      <Stack.Screen name="support" />
     </Stack>
   );
 }

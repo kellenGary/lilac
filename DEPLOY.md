@@ -1,4 +1,4 @@
-# Deploying reflex
+# Deploying Lilac Pages
 
 Three parts: **Supabase** (database + login, already live), **Render** (the API in `server/`), **Vercel** (the web app).
 Do them in this order, because each needs the address of the one before.
@@ -9,7 +9,7 @@ Nothing is pushed anywhere yet. Create an empty **private** repo on GitHub, then
 ```
 git add -A
 git status          # glance over it: no .env files should be listed
-git commit -m "reflex"
+git commit -m "lilac"
 git remote add origin git@github.com:<you>/<repo>.git
 git push -u origin main
 ```
@@ -46,7 +46,7 @@ request after a break takes a long time.
 | `EXPO_PUBLIC_SUPABASE_KEY` | the `sb_publishable_...` key (never the secret key) |
 | `EXPO_PUBLIC_API_URL` | your Render address, e.g. `https://reflex-api.onrender.com` |
 
-3. Deploy. Note the site address, e.g. `https://reflex.vercel.app`.
+3. Deploy. Note the site address, e.g. `https://lilac.vercel.app`.
 
 ## 3. Connect them
 - **Render:** set `CORS_ORIGINS` to the Vercel address (no trailing slash). Redeploy if it doesn't restart on its own.
@@ -57,13 +57,26 @@ request after a break takes a long time.
   SMTP. For just you, you can switch off "Confirm email".
 
 ## 4. Use it on your phone
-Open the Vercel address in Safari, then Share > **Add to Home Screen**. A native iOS app later needs EAS builds and an
-Apple developer account.
+Open the Vercel address in Safari, then Share > **Add to Home Screen**. The native iOS app is built with EAS and
+needs an Apple developer account: see "iOS app" below.
+
+## 5. Keep the free tiers awake
+Render's free tier sleeps after ~15 minutes idle, and a free Supabase project pauses after ~7 days without database
+activity. Point an uptime monitor (e.g. UptimeRobot, 5-minute interval) at `https://<service>.onrender.com/health`.
+`/health` runs `select 1`, so one ping keeps both awake, and returns 503 if the database is unreachable. Consider the
+paid Render plan before App Review so a cold start can't time out a reviewer.
+
+## iOS app (EAS)
+1. Link the project once: `npx eas-cli@latest init`.
+2. `.env` is git-ignored, so EAS builds don't see it. Create the three `EXPO_PUBLIC_*` variables above in EAS for the
+   `production` environment: `eas env:create --environment production`.
+3. `eas build -p ios --profile production`, then `eas submit -p ios` (uploads to TestFlight).
+4. Store listing copy, privacy answers and review notes are in [docs/APP_STORE.md](docs/APP_STORE.md).
 
 ## Before relying on it
 - Back up `ENTRY_ENCRYPTION_KEY` somewhere outside the database (a password manager). Losing it loses every entry.
 - Free-tier Supabase projects pause after a period of inactivity, and a paused project stops working. Check the current
   policy and consider the paid plan, which also adds proper backups.
 - Entry text is sent to TypeSafe for scoring. Review their data retention terms.
-- Not built yet: rate limiting, a Settings screen (the server already has export and delete-account), and handling for
-  entries that mention self-harm.
+- Not built yet: rate limiting. (Settings with data export and account deletion, the consent and privacy screens, and
+  the crisis-support screen for entries that mention self-harm are built.)

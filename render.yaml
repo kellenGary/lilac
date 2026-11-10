@@ -22,6 +22,6 @@ services:
         sync: false
       - key: JEV_API_KEY
         sync: false
-      # Your Vercel site address, e.g. https://reflex.vercel.app (comma-separate several). No trailing slash.
+      # Your Vercel site address, e.g. https://lilac.vercel.app (comma-separate several). No trailing slash.
       - key: CORS_ORIGINS
         sync: false
