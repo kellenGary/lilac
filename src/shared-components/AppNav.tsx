@@ -3,14 +3,14 @@ import { Pressable, Text, View } from 'react-native';
 
 const ITEMS = [
   { label: 'Journal', href: '/' },
-  { label: 'Patterns', href: '/patterns' },
+  { label: 'Look back', href: '/look-back' },
   { label: 'Garden', href: '/garden' },
   { label: 'Settings', href: '/settings' },
 ] as const;
 
 /** Which section a path belongs to, so an entry highlights Journal and a week highlights Garden. */
 function sectionOf(pathname: string): string {
-  if (pathname.startsWith('/patterns')) return '/patterns';
+  if (pathname.startsWith('/look-back') || pathname.startsWith('/themes')) return '/look-back';
   if (pathname.startsWith('/garden') || pathname.startsWith('/week')) return '/garden';
   if (pathname.startsWith('/settings')) return '/settings';
   return '/';

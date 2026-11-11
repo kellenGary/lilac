@@ -25,9 +25,9 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Icon sf={{ default: 'book', selected: 'book.fill' }} />
         <NativeTabs.Trigger.Label>Journal</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="patterns">
-        <NativeTabs.Trigger.Icon sf="chart.xyaxis.line" />
-        <NativeTabs.Trigger.Label>Patterns</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="look-back">
+        <NativeTabs.Trigger.Icon sf={{ default: 'calendar', selected: 'calendar' }} />
+        <NativeTabs.Trigger.Label>Look back</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="garden">
         <NativeTabs.Trigger.Icon sf={{ default: 'leaf', selected: 'leaf.fill' }} />

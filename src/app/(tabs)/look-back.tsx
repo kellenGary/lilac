@@ -1,3 +1,3 @@
-import { PatternsPage } from '@/pages';
+import { LookBackPage } from '@/pages';
 
-export default PatternsPage;
+export default LookBackPage;

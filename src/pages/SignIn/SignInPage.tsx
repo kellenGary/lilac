@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useRef, useState, type ComponentRef } from 'react';
 import { Pressable, ScrollView, Text, View, type TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +17,7 @@ const SHOWCASE: PlantState = { growth: 0.92, tension: 0.1, droop: 0, carry: 0.8,
 export function SignInPage() {
   const { signIn, signUp } = useAuth();
   const { shadow } = useColors();
+  const router = useRouter();
   const [mode, setMode] = useState<'in' | 'up'>('up');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -173,6 +175,16 @@ export function SignInPage() {
                       onSubmitEditing={submit}
                     />
                   </View>
+
+                  {!creating && (
+                    <Pressable
+                      accessibilityRole="link"
+                      onPress={() => router.push({ pathname: '/reset-password', params: { email: email.trim() } })}
+                      className="mt-3 self-start py-1"
+                    >
+                      <Text className="text-sm font-medium text-ink underline">Forgot password?</Text>
+                    </Pressable>
+                  )}
 
                   {error && (
                     <View accessibilityRole="alert" className="mt-4 rounded-xl bg-rose px-4 py-3">
