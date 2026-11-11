@@ -2,7 +2,7 @@ import { serve } from '@hono/node-server';
 import { TypeSafeClient, type Questions } from '@typesafe-ai/sdk';
 
 import { createApp } from './app';
-import { createSupabaseUserDeleter, createSupabaseVerifier } from './auth';
+import { createSupabaseUserDeleter, createSupabaseUserGate, createSupabaseVerifier } from './auth';
 import { parseKey } from './crypto';
 import { createDb } from './db/client';
 import { loadEnv, parseOrigins } from './env';
@@ -27,10 +27,12 @@ const app = createApp({
   db,
   vault: createVault(db, parseKey(env.ENTRY_ENCRYPTION_KEY)),
   verifyToken: createSupabaseVerifier(env.SUPABASE_URL),
+  userGate: createSupabaseUserGate(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
   deleteAuthUser: createSupabaseUserDeleter(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
   classify: createJevClassifier(ask),
   tag: createJevTagger(ask),
   corsOrigins,
+  limits: { globalDaily: env.JEV_DAILY_CAP },
 });
 
 serve({ fetch: app.fetch, port: env.PORT }, ({ port }) => console.log(`lilac-server listening on :${port}`));
