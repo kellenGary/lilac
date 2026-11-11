@@ -11,6 +11,8 @@ const schema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:8081'),
   JEV_API_KEY: z.string().min(1),
   // Pin a version (e.g. jev-1.13.0) once you have tuned thresholds; aliases like jev-latest move when TypeSafe ships.
+  // Hard ceiling on Jev requests per day across all users. Keep it well above real daily use.
+  JEV_DAILY_CAP: z.coerce.number().int().positive().default(2000),
   JEV_MODEL: z.string().default('jev-latest'),
 });
 

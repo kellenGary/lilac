@@ -1,23 +1,36 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 
+import { addDays, formatShort, fromKey } from '@/lib/dates';
+import { entriesInWindow } from '@/lib/orbs';
 import { hasThemes, headlines, MIN_DAYS, themePatterns } from '@/lib/patterns';
-import { SIGNALS } from '@/lib/signals';
-import { themeLabel } from '@/lib/themes';
 import { api } from '@/services/api';
 import { Button, Column, Container, PageHeader, Reveal, Screen, LoadingScreen } from '@/shared-components';
 import { useEntries } from '@/state/entries';
-import { DeltaBar } from './components/DeltaBar';
+import { OrbField } from './components/OrbField';
+import { ThemeSheet } from './components/ThemeSheet';
+import { TimeScrubber } from './components/TimeScrubber';
 
-export function PatternsPage() {
-  const { status, entries, reload } = useEntries();
+export function ThemesPage() {
+  const { status, entries, today, reload } = useEntries();
+  const [offset, setOffset] = useState(0);
+  const [selected, setSelected] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const [failed, setFailed] = useState(false);
+  // How far back the time strip reaches: to the first entry, at least a month, at most two years.
+  const weeks = useMemo(() => {
+    const oldest = entries[entries.length - 1]?.date;
+    if (!oldest) return 4;
+    const days = Math.round((fromKey(today).getTime() - fromKey(oldest).getTime()) / 86_400_000);
+    return Math.max(4, Math.min(104, Math.ceil(days / 7)));
+  }, [entries, today]);
   if (status !== 'ready') return <LoadingScreen />;
 
   const tagged = hasThemes(entries);
   const patterns = themePatterns(entries);
   const lines = headlines(patterns);
+  const end = addDays(today, -Math.min(offset, weeks) * 7);
+  const selectedEntries = selected ? entriesInWindow(entries, end).filter((e) => e.themes.includes(selected)) : [];
 
   const analyse = async () => {
     setWorking(true);
@@ -36,19 +49,19 @@ export function PatternsPage() {
   };
 
   return (
-    <Screen inTabs>
+    <Screen>
       <Container>
-        <PageHeader />
+        <PageHeader back />
         <Column className="pb-16">
           <Text accessibilityRole="header" className="text-4xl font-bold tracking-normal text-ink">
-            Patterns
+            Themes
           </Text>
           <Text className="mt-2 max-w-[56ch] text-base leading-6 text-muted">
-            What you write about, and how those days read compared with your other days. These are links, not causes.
+            What you write about. Bigger glows are themes that came up more, and warmer colors are rougher days.
           </Text>
 
           {entries.length === 0 ? (
-            <Text className="mt-10 text-base text-muted">Patterns appear once you have written a few entries.</Text>
+            <Text className="mt-10 text-base text-muted">Themes appear once you have written a few entries.</Text>
           ) : !tagged ? (
             <Reveal style={{ marginTop: 32 }}>
               <View className="gap-4 rounded-3xl bg-surface p-6">
@@ -65,14 +78,21 @@ export function PatternsPage() {
                 </View>
               </View>
             </Reveal>
-          ) : patterns.length === 0 ? (
-            <Text className="mt-10 max-w-[52ch] text-base leading-6 text-muted">
-              Not enough yet. A theme needs at least {MIN_DAYS} days with it and {MIN_DAYS} without before it can be
-              compared. Keep writing.
-            </Text>
           ) : (
             <>
-              {lines.length > 0 && (
+              <View className="mt-6">
+                <OrbField entries={entries} end={end} onSelect={setSelected} />
+              </View>
+              <View className="mt-2">
+                <TimeScrubber
+                  weeks={weeks}
+                  offset={Math.min(offset, weeks)}
+                  onChange={setOffset}
+                  endLabel={offset === 0 ? 'Today' : formatShort(end)}
+                />
+              </View>
+
+              {lines.length > 0 ? (
                 <Reveal style={{ marginTop: 28 }}>
                   <View className="gap-3 rounded-3xl bg-sun p-6">
                     {lines.map((line) => (
@@ -82,36 +102,13 @@ export function PatternsPage() {
                     ))}
                   </View>
                 </Reveal>
+              ) : (
+                <Text className="mt-8 max-w-[52ch] text-[13px] leading-5 text-muted">
+                  Written takeaways appear once a theme has at least {MIN_DAYS} days with it and {MIN_DAYS} without. Tap a
+                  glow to read the entries behind it.
+                </Text>
               )}
-
-              <View className="mt-10">
-                <View className="mb-3 flex-row items-end gap-3">
-                  <View className="w-24 sm:w-32" />
-                  {SIGNALS.map((s) => (
-                    <View key={s.key} className="flex-1 flex-row items-center justify-center gap-1">
-                      <View className="h-2 w-2 rounded-sm" style={{ backgroundColor: s.color }} />
-                      <Text className="text-[11px] text-muted sm:text-xs">{s.label}</Text>
-                    </View>
-                  ))}
-                </View>
-                {patterns.map((p, i) => (
-                  <Reveal key={p.theme} delay={Math.min(i, 8) * 70}>
-                    <View className="flex-row items-center gap-3 border-t border-line py-4">
-                      <View className="w-24 sm:w-32">
-                        <Text className="text-[15px] font-semibold text-ink">{themeLabel(p.theme)}</Text>
-                        <Text className="text-xs text-muted">{p.days} days</Text>
-                      </View>
-                      {SIGNALS.map((s) => (
-                        <DeltaBar key={s.key} value={p.delta[s.key]} color={s.color} label={s.label} />
-                      ))}
-                    </View>
-                  </Reveal>
-                ))}
-              </View>
-              <Text className="mt-6 max-w-[56ch] text-[13px] leading-5 text-muted">
-                Each bar is the average score on days with the theme minus the average on days without it. Right means
-                higher, left means lower.
-              </Text>
+              <ThemeSheet theme={selected} entries={selectedEntries} onClose={() => setSelected(null)} />
             </>
           )}
         </Column>

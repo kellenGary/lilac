@@ -44,6 +44,7 @@ function Routes() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="finish" />
         <Stack.Screen name="safety" />
+        <Stack.Screen name="themes" />
         <Stack.Screen name="week/[start]" />
         <Stack.Screen
           name="entry/[date]"
@@ -56,6 +57,7 @@ function Routes() {
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="sign-in" />
+        <Stack.Screen name="reset-password" />
       </Stack.Protected>
       <Stack.Screen name="privacy" />
       <Stack.Screen name="support" />

@@ -3,10 +3,11 @@ import { supabase } from './supabase';
 
 const BASE = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8787').replace(/\/$/, '');
 
-/** `network`: couldn't reach the server. `auth`: our login was rejected. `server`: anything else. */
+/** `network`: couldn't reach the server. `auth`: our login was rejected. `limited`: too many requests (429) or the
+ * server is at its daily capacity (503 `busy`). `server`: anything else. */
 export class ApiError extends Error {
   constructor(
-    public kind: 'network' | 'auth' | 'server',
+    public kind: 'network' | 'auth' | 'limited' | 'server',
     message: string,
   ) {
     super(message);
@@ -27,7 +28,10 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   } catch {
     throw new ApiError('network', `Could not reach the server at ${BASE}`);
   }
-  if (!res.ok) throw new ApiError(res.status === 401 ? 'auth' : 'server', `Request failed (${res.status})`);
+  if (!res.ok) {
+    const kind = res.status === 401 ? 'auth' : res.status === 429 || (res.status === 503 && res.headers.has('Retry-After')) ? 'limited' : 'server';
+    throw new ApiError(kind, `Request failed (${res.status})`);
+  }
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }
 
@@ -68,5 +72,7 @@ export const api = {
 export function saveErrorMessage(e: unknown): string {
   if (e instanceof ApiError && e.kind === 'network')
     return "We can't reach the server right now. Your text is still here, so try again in a moment.";
+  if (e instanceof ApiError && e.kind === 'limited')
+    return "You've saved a lot of entries in a short time. Your text is still here, so try again in a little while.";
   return "We couldn't score your entry right now. Your text is still here, so try again in a moment.";
 }

@@ -23,25 +23,33 @@ export function WritePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feeling, setFeeling] = useState<number | null>(null);
-  const [nativeHeight, setNativeHeight] = useState(0);
+  const viewportHeight = useRef(0);
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
   const caretEnd = useRef(0);
 
-  // The editor grows with what is written, so the page itself is what scrolls (endlessly, no inner scrollbar).
+  // Web: size the textarea to its text so the page itself is what scrolls (endlessly, no inner scrollbar).
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      const el = inputRef.current as unknown as HTMLTextAreaElement | null;
-      if (el) {
-        el.style.height = 'auto';
-        el.style.height = `${el.scrollHeight}px`;
-      }
+    if (Platform.OS !== 'web') return;
+    const el = inputRef.current as unknown as HTMLTextAreaElement | null;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
     }
     // Keep the line being typed in view when writing at the end.
     if (caretEnd.current >= text.length - 1) {
       requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: false }));
     }
   }, [text]);
+
+  // Phones: the input grows by itself. Only scroll once the writing has outgrown the screen, and only when the page
+  // actually got taller. Scrolling on every keystroke (or setting the input's height from its measured size) made the
+  // first few lines jump around while the keyboard was sliding up.
+  const followCaret = (_width: number, contentHeight: number) => {
+    if (Platform.OS === 'web') return;
+    if (caretEnd.current < text.length - 1) return;
+    if (contentHeight > viewportHeight.current) scrollRef.current?.scrollToEnd({ animated: false });
+  };
 
   if (status !== 'ready') return <LoadingScreen />; // wait for entries so we know whether today is already written
 
@@ -91,6 +99,10 @@ export function WritePage() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           automaticallyAdjustKeyboardInsets
+          onLayout={(e) => {
+            viewportHeight.current = e.nativeEvent.layout.height;
+          }}
+          onContentSizeChange={followCaret}
         >
           <View className="w-full max-w-[680px] gap-3.5 self-center px-5 pb-48 pt-10 sm:pt-16 lg:px-8 lg:pt-24">
             {firstEntry && (
@@ -142,14 +154,9 @@ export function WritePage() {
               onSelectionChange={(e) => {
                 caretEnd.current = e.nativeEvent.selection.end;
               }}
-              onContentSizeChange={(e) => Platform.OS !== 'web' && setNativeHeight(e.nativeEvent.contentSize.height)}
               scrollEnabled={false}
               className="mt-6 min-h-[360px] text-[19px] leading-8 text-ink"
-              style={[
-                { textAlignVertical: 'top' },
-                Platform.OS !== 'web' && nativeHeight ? { height: Math.max(360, nativeHeight) } : null,
-                noOutline,
-              ]}
+              style={[{ textAlignVertical: 'top' }, noOutline]}
             />
           </View>
         </ScrollView>

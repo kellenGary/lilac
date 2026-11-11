@@ -1,1 +1,0 @@
-export { PatternsPage } from './PatternsPage';

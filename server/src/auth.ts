@@ -33,3 +33,67 @@ export function createSupabaseUserDeleter(supabaseUrl: string, serviceRoleKey: s
     if (!res.ok && res.status !== 404) throw new Error(`Supabase user delete failed (${res.status})`);
   };
 }
+
+/**
+ * Decides whether a user may still use the API. A valid token alone isn't enough: tokens live for about an hour, so
+ * a deleted or banned user would otherwise keep working until theirs expires.
+ */
+export type UserGate = {
+  isActive: (userId: string) => Promise<boolean>;
+  /** Locks a user out right away (used while their account is being deleted). */
+  block: (userId: string) => void;
+  /** Undoes `block`, e.g. when a deletion failed and they need to retry. */
+  unblock: (userId: string) => void;
+};
+
+/**
+ * Asks Supabase (admin API) whether the user still exists and isn't banned, remembering the answer briefly so this
+ * is one extra request per user per `ttlMs`, not per call. If Supabase can't be reached the user is let through (their
+ * token is already verified, and an outage there shouldn't take the journal offline) and the failure is not cached.
+ * Counts are in memory, so they apply to this process only.
+ */
+export function createSupabaseUserGate(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  { ttlMs = 60_000, now = Date.now, fetchFn = fetch }: { ttlMs?: number; now?: () => number; fetchFn?: typeof fetch } = {},
+): UserGate {
+  const base = supabaseUrl.replace(/\/$/, '');
+  const blocked = new Set<string>();
+  const cache = new Map<string, { active: boolean; until: number }>();
+  const headers: Record<string, string> = serviceRoleKey.startsWith('sb_secret_')
+    ? { apikey: serviceRoleKey }
+    : { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` };
+
+  return {
+    block: (userId) => {
+      blocked.add(userId);
+      cache.delete(userId);
+    },
+    unblock: (userId) => {
+      blocked.delete(userId);
+      cache.delete(userId);
+    },
+    async isActive(userId) {
+      if (blocked.has(userId)) return false;
+      const t = now();
+      const hit = cache.get(userId);
+      if (hit && hit.until > t) return hit.active;
+      try {
+        const res = await fetchFn(`${base}/auth/v1/admin/users/${userId}`, { headers });
+        if (res.status === 404) return remember(false);
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const user = (await res.json()) as { banned_until?: string | null };
+        const banned = user.banned_until ? new Date(user.banned_until).getTime() > t : false;
+        return remember(!banned);
+      } catch (err) {
+        console.error(`user check failed, letting the request through: ${err instanceof Error ? err.message : err}`);
+        return true;
+      }
+      function remember(active: boolean) {
+        if (cache.size > 10_000) cache.clear();
+        cache.set(userId, { active, until: t + ttlMs });
+        return active;
+      }
+    },
+  };
+}
