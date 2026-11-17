@@ -103,12 +103,3 @@ export function Row({
     </Pressable>
   );
 }
-
-export function Stat({ value, label }: { value: string | number; label: string }) {
-  return (
-    <View className="flex-1 items-center rounded-2xl bg-cream px-2 py-3">
-      <Text className="text-2xl font-bold tracking-tight text-ink">{value}</Text>
-      <Text className="mt-0.5 text-xs text-muted">{label}</Text>
-    </View>
-  );
-}

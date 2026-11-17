@@ -1,1 +1,0 @@
-export { GardenPage } from './GardenPage';

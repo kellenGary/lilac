@@ -29,13 +29,13 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Icon sf={{ default: 'calendar', selected: 'calendar' }} />
         <NativeTabs.Trigger.Label>Look back</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="garden">
-        <NativeTabs.Trigger.Icon sf={{ default: 'leaf', selected: 'leaf.fill' }} />
-        <NativeTabs.Trigger.Label>Garden</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="todo">
+        <NativeTabs.Trigger.Icon sf={{ default: 'checkmark.circle', selected: 'checkmark.circle.fill' }} />
+        <NativeTabs.Trigger.Label>To do</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="settings">
-        <NativeTabs.Trigger.Icon sf={{ default: 'gearshape', selected: 'gearshape.fill' }} />
-        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="profile">
+        <NativeTabs.Trigger.Icon sf={{ default: 'person', selected: 'person.fill' }} />
+        <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

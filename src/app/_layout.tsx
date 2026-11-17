@@ -11,6 +11,8 @@ import { AuthProvider, useAuth } from '@/state/auth';
 import { ConsentProvider, useConsent } from '@/state/consent';
 import { AppLockProvider } from '@/state/lock';
 import { EntriesProvider } from '@/state/entries';
+import { LettersProvider } from '@/state/letters';
+import { TasksProvider } from '@/state/tasks';
 import { RemindersProvider } from '@/state/reminders';
 import { TransitionProvider } from '@/state/transition';
 import { ThemeProvider, useTheme } from '@/state/theme';
@@ -45,6 +47,9 @@ function Routes() {
         <Stack.Screen name="finish" />
         <Stack.Screen name="safety" />
         <Stack.Screen name="themes" />
+        <Stack.Screen name="settings" />
+        <Stack.Screen name="letter/new" />
+        <Stack.Screen name="letter/[id]" />
         <Stack.Screen name="week/[start]" />
         <Stack.Screen
           name="entry/[date]"
@@ -74,10 +79,14 @@ export default function RootLayout() {
             <ConsentProvider>
               <EntriesProvider>
                 <RemindersProvider>
-                  <TransitionProvider>
-                    <Routes />
-                    <ThemedStatusBar />
-                  </TransitionProvider>
+                  <LettersProvider>
+                    <TasksProvider>
+                      <TransitionProvider>
+                        <Routes />
+                        <ThemedStatusBar />
+                      </TransitionProvider>
+                    </TasksProvider>
+                  </LettersProvider>
                 </RemindersProvider>
               </EntriesProvider>
             </ConsentProvider>

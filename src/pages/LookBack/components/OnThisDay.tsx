@@ -17,20 +17,20 @@ export function OnThisDay({ memories }: { memories: Memory[] }) {
     );
   }
   return (
-    <View className="gap-3">
-      {memories.map(({ label, entry }) => (
+    <View className="rounded-[22px] border border-line bg-surface px-5">
+      {memories.map(({ label, entry }, i) => (
         <Pressable
           key={entry.date}
           accessibilityRole="link"
           onPress={() => router.push({ pathname: '/entry/[date]', params: { date: entry.date } })}
-          className="gap-2 rounded-3xl bg-surface p-5 hover:opacity-80"
+          className={`py-4 hover:opacity-70 ${i > 0 ? 'border-t border-line' : ''}`}
         >
-          <View className="flex-row items-center justify-between">
-            <Text className="text-xs font-semibold uppercase tracking-widest text-muted">{label}</Text>
-            <Face level={feelingOf(entry)} size={26} />
+          <View className="mb-1.5 flex-row items-center gap-2.5">
+            <Text className="text-[15px] font-semibold text-ink">{formatLong(entry.date)}</Text>
+            <Face level={feelingOf(entry)} size={22} />
+            <Text className="ml-auto text-[11px] font-semibold uppercase tracking-[1.3px] text-purple">{label}</Text>
           </View>
-          <Text className="text-sm font-semibold text-ink">{formatLong(entry.date)}</Text>
-          <Text numberOfLines={4} className="text-base leading-6 text-ink opacity-70">
+          <Text numberOfLines={2} className="text-[15px] leading-[22px] text-ink opacity-75">
             {entry.text.replace(/\n+/g, ' ')}
           </Text>
         </Pressable>

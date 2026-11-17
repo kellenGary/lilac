@@ -36,21 +36,17 @@ export function WeekRecap({ recap, isSunday }: { recap: Recap | null; isSunday: 
   const router = useRouter();
   if (!recap) {
     return (
-      <View className="rounded-3xl bg-surface p-6">
-        <Text className="text-base leading-6 text-body">
-          Nothing written yet this week. Your recap appears here after your first entry.
-        </Text>
-      </View>
+      <Text className="text-base text-muted">Nothing written yet this week.</Text>
     );
   }
   const { daysWritten, daysSoFar, topThemes, brightest, heaviest, phrase } = recap;
   return (
-    <View className="gap-5 rounded-3xl bg-sun p-6">
+    <View className="gap-5 rounded-3xl bg-lilac/20 p-5">
       <View>
         <Text className="text-xs font-semibold uppercase tracking-widest text-body">
           {isSunday ? 'Your week' : 'This week so far'}
         </Text>
-        <Text className="mt-1.5 text-2xl font-bold tracking-tight text-ink">
+        <Text className="mt-1 text-xl font-semibold text-ink">
           {daysWritten} {daysWritten === 1 ? 'day' : 'days'} written
         </Text>
         <View className="mt-3 flex-row gap-1.5" accessibilityLabel={`${daysWritten} of ${daysSoFar} days so far`}>

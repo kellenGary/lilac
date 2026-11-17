@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 
@@ -74,14 +74,15 @@ export function RemindersProvider({ children }: { children: ReactNode }) {
     scheduleReminders(prefs, wroteToday).catch(() => {});
   }, [loaded, signedIn, status, prefs, wroteToday, resumes, permission]);
 
-  // Tapping a reminder opens the writing page (which sends you to today's entry if it is already written).
+  // Tapping a reminder opens the writing page (which sends you to today's entry if it is already written); tapping a
+  // letter notification opens that letter.
   useEffect(() => {
     if (!remindersSupported || !signedIn) return;
     const open = (response: Notifications.NotificationResponse | null | undefined) => {
       const url = response?.notification.request.content.data?.url;
       if (typeof url !== 'string') return;
       Notifications.clearLastNotificationResponse();
-      router.push('/write');
+      router.push(url as Href);
     };
     open(Notifications.getLastNotificationResponse());
     const sub = Notifications.addNotificationResponseReceivedListener(open);

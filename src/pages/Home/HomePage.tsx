@@ -102,7 +102,7 @@ export function HomePage() {
           </View>
         ) : (
           // Phones and tablets: write button and streak, then a compact plant and trend card, then the journal.
-          <View className="items-center gap-8">
+          <View className="items-center gap-3">
             <View className="w-full max-w-[680px]">
               <Reveal delay={100}>
                 <SidebarActions />

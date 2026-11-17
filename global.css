@@ -6,7 +6,9 @@
 :root {
   --color-cream: 248 243 230;
   --color-surface: 255 252 243;
-  --color-ink: 42 42 36;
+  --color-ink: 23 22 26;
+  --color-purple: 107 84 163;
+  --color-lilac: 185 163 220;
   --color-muted: 107 103 82;
   --color-body: 74 74 62;
   --color-line: 227 218 195;

@@ -9,7 +9,7 @@ export function Wordmark() {
       <Pressable
         accessibilityRole="link"
         accessibilityLabel="Lilac Pages home"
-        className="flex-row items-center hover:opacity-70"
+        className="flex-row items-center gap-2 hover:opacity-70"
       >
         <FaceMark size={24} />
         <Text className="text-[19px] font-bold tracking-wide text-ink">Lilac Pages</Text>

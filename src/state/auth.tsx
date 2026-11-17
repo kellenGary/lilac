@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
 
+import { cleanName, firstNameOf } from '@/lib/names';
 import { supabase } from '@/services/supabase';
 
 type AuthContextValue = {
@@ -12,6 +13,10 @@ type AuthContextValue = {
   /** Resolves true if the user can go straight in, false if they must confirm their email first. */
   signUp: (email: string, password: string, fullName: string) => Promise<boolean>;
   signOut: () => Promise<void>;
+  /** The person's first name, or an empty string if they have not given one. */
+  firstName: string;
+  /** Saves a new first name on the account. */
+  setFirstName: (name: string) => Promise<void>;
   /** Emails a 6-digit reset code. Resolves the same whether or not the address has an account. */
   sendResetCode: (email: string) => Promise<void>;
   /** Checks the emailed code and sets the new password. On success the user is signed in. */
@@ -31,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoading(false);
+      // Pick up changes made on another device (a new first name, say). The stored login only refreshes about hourly.
+      if (data.session) supabase.auth.refreshSession().catch(() => {});
     });
     const { data } = supabase.auth.onAuthStateChange((_event, next) => {
       if (!holdSession.current) setSession(next);
@@ -54,13 +61,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, fullName: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
+    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName, first_name: firstNameOf({ full_name: fullName }) } } });
     if (error) throw error;
     return !!data.session;
   }, []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+  }, []);
+
+  const setFirstName = useCallback(async (name: string) => {
+    const { error } = await supabase.auth.updateUser({ data: { first_name: cleanName(name) } });
+    if (error) throw error;
   }, []);
 
   const sendResetCode = useCallback(async (email: string) => {
@@ -86,8 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ session, loading, signIn, signUp, signOut, sendResetCode, resetPassword }),
-    [session, loading, signIn, signUp, signOut, sendResetCode, resetPassword],
+    () => ({ session, loading, signIn, signUp, signOut, firstName: firstNameOf(session?.user.user_metadata), setFirstName, sendResetCode, resetPassword }),
+    [session, loading, signIn, signUp, signOut, setFirstName, sendResetCode, resetPassword],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

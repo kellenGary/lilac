@@ -77,10 +77,20 @@ export async function cancelReminders(): Promise<void> {
   if (remindersSupported) await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
-/** Replaces everything scheduled with the plan for `prefs`. */
+/** Cancels only the daily writing reminders, so notifications for other things (letters opening) are left alone. */
+async function cancelDailyReminders(): Promise<void> {
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    scheduled
+      .filter((n) => n.content.data?.url === '/write')
+      .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+  );
+}
+
+/** Replaces the daily reminders with the plan for `prefs`. */
 export async function scheduleReminders(prefs: ReminderPrefs, wroteToday: boolean): Promise<void> {
   if (!remindersSupported) return;
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  await cancelDailyReminders();
   for (const date of reminderDates(prefs, new Date(), wroteToday)) {
     await Notifications.scheduleNotificationAsync({
       content: {
@@ -103,4 +113,39 @@ if (remindersSupported) {
       shouldShowList: true,
     }),
   });
+}
+
+const LETTER_PREFIX = 'letter-';
+const LETTER_HOUR = 9;
+
+/**
+ * Makes the scheduled "your letter is ready" notifications match the letters that are still locked: one at 9 AM on each
+ * unlock day. Nothing from the letter is in the notification. Does nothing unless notifications are already allowed.
+ */
+export async function syncLetterNotifications(locked: { id: string; unlockOn: string }[]): Promise<void> {
+  if (!remindersSupported) return;
+  if ((await getReminderPermission()) !== 'granted') return;
+  const wanted = new Map(locked.map((l) => [`${LETTER_PREFIX}${l.id}`, l]));
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  for (const n of scheduled) {
+    if (n.identifier.startsWith(LETTER_PREFIX) && !wanted.has(n.identifier)) {
+      await Notifications.cancelScheduledNotificationAsync(n.identifier);
+    }
+  }
+  const have = new Set(scheduled.map((n) => n.identifier));
+  for (const [identifier, l] of wanted) {
+    if (have.has(identifier)) continue;
+    const [y, m, d] = l.unlockOn.split('-').map(Number);
+    const date = new Date(y, m - 1, d, LETTER_HOUR, 0, 0);
+    if (date <= new Date()) continue;
+    await Notifications.scheduleNotificationAsync({
+      identifier,
+      content: {
+        title: 'Lilac Pages',
+        body: 'A letter from past you is ready to read.',
+        data: { url: `/letter/${l.id}` },
+      },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
+    });
+  }
 }

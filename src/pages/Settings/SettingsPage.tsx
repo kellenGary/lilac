@@ -4,7 +4,6 @@ import { Linking, Platform, Pressable, Text, TextInput, View, type TextStyle } f
 
 import { saveFile } from '@/lib/download';
 import { REMINDER_TIMES } from '@/lib/reminders';
-import { weekStartKey } from '@/lib/dates';
 import { api } from '@/services/api';
 import { Button, Column, Container, PageHeader, Reveal, Screen, Segmented, Switch } from '@/shared-components';
 import { useAuth } from '@/state/auth';
@@ -13,17 +12,14 @@ import { useAppLock } from '@/state/lock';
 import { useReminders } from '@/state/reminders';
 import { useTheme } from '@/state/theme';
 import { PHASE_LABEL } from '@/theme/palettes';
-import { Card, Row, Stat } from './components/parts';
+import { Card, Row } from './components/parts';
 
 const noOutline = (Platform.OS === 'web' ? { outlineStyle: 'none' } : {}) as unknown as TextStyle;
 
-const monthYear = (iso?: string) =>
-  iso ? new Date(iso).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '';
-
 export function SettingsPage() {
   const router = useRouter();
-  const { session, signOut } = useAuth();
-  const { entries, streak, reload } = useEntries();
+  const { signOut } = useAuth();
+  const { reload } = useEntries();
   const { appearance, setAppearance, timeOfDay, setTimeOfDay, phase } = useTheme();
   const reminders = useReminders();
   const lock = useAppLock();
@@ -34,8 +30,6 @@ export function SettingsPage() {
   const [confirming, setConfirming] = useState(false);
   const [typed, setTyped] = useState('');
 
-  const email = session?.user.email ?? '';
-  const weeks = new Set(entries.map((e) => weekStartKey(e.date))).size;
   const canDelete = typed.trim().toLowerCase() === 'delete' && !busy;
 
   const run = async (kind: 'export' | 'refresh' | 'delete', work: () => Promise<void>) => {
@@ -78,39 +72,15 @@ export function SettingsPage() {
     });
 
   return (
-    <Screen inTabs>
+    <Screen>
       <Container>
-        <PageHeader />
+        <PageHeader back />
         <Column className="pb-16">
-          <Text accessibilityRole="header" className="text-4xl font-bold tracking-normal text-ink">
+          <Text accessibilityRole="header" className="text-[30px] font-semibold tracking-tight text-ink">
             Settings
           </Text>
 
-          {/* Who you are, and a little of what you have built */}
-          <Reveal style={{ marginTop: 24 }}>
-            <View className="gap-5 rounded-3xl bg-sage p-5">
-              <View className="flex-row items-center gap-4">
-                <View className="h-14 w-14 items-center justify-center rounded-full bg-cream">
-                  <Text className="text-2xl font-bold text-ink">{email.charAt(0).toUpperCase() || '·'}</Text>
-                </View>
-                <View className="flex-1">
-                  <Text numberOfLines={1} className="text-lg font-semibold text-ink">
-                    {email}
-                  </Text>
-                  {session?.user.created_at && (
-                    <Text className="text-sm text-body">Writing here since {monthYear(session.user.created_at)}</Text>
-                  )}
-                </View>
-              </View>
-              <View className="flex-row gap-3">
-                <Stat value={entries.length} label={entries.length === 1 ? 'entry' : 'entries'} />
-                <Stat value={streak} label="day streak" />
-                <Stat value={weeks} label={weeks === 1 ? 'week' : 'weeks'} />
-              </View>
-            </View>
-          </Reveal>
-
-          <View className="mt-8 gap-8">
+          <View className="mt-6 gap-8">
             <Reveal delay={60}>
               <Card title="Appearance">
                 <Row

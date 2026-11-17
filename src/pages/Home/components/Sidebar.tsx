@@ -1,14 +1,19 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
 import { useTween, useTweenedNumber } from '@/lib/animation';
 import { formatLong, formatShort, weekNumber, weekRangeLabel, weekStartKey } from '@/lib/dates';
 import { plantStateForWeek, vitalityLabel } from '@/lib/plant';
 import { speciesForWeek } from '@/lib/plantSpecies';
 import { dailySeries, weeklySeries } from '@/lib/series';
+import { signalColor } from '@/lib/signals';
 import { Button, Plant, Segmented, TrendChart } from '@/shared-components';
+import { DateCard } from './DateCard';
+import { WeekDots } from './WeekDots';
 import { useEntries } from '@/state/entries';
+import { useColors } from '@/state/theme';
 import { useTransition } from '@/state/transition';
 
 type Mode = 'day' | 'week';
@@ -31,6 +36,9 @@ export function SidebarActions() {
 
   return (
     <View>
+      <View className="mb-4">
+        <DateCard today={today} />
+      </View>
       <Button
         size="lg"
         label={written ? "View today's entry" : "Write today's entry"}
@@ -38,7 +46,9 @@ export function SidebarActions() {
           written
             ? router.push({
                 pathname: '/entry/[date]',
-                params: { date: today },
+                params: {
+                  date: today,
+                },
               })
             : go(
                 '/write',
@@ -47,12 +57,15 @@ export function SidebarActions() {
         }
       />
 
-      <View className="flex-row items-baseline gap-2.5 border-b border-line pb-6 pt-7">
-        <Text className="text-5xl font-bold leading-[48px] tracking-tighter text-ink">{streakShown}</Text>
-        <Text className="text-[15px] text-body">{streak === 0 ? 'day streak. Start one today' : 'day streak'}</Text>
-        <Text className="ml-auto text-[13px] text-muted">
-          Week {weekNumber(today)}, {weekCount} of 7
-        </Text>
+      <View className="pb-2 pt-6">
+        <View className="mb-4 flex-row items-baseline gap-2">
+          <Text className="text-[34px] font-semibold leading-[38px] tracking-tighter text-ink">{streakShown}</Text>
+          <Text className="text-[14px] text-purple">{streak === 0 ? 'day streak. Start one today' : 'day streak'}</Text>
+          <Text className="ml-auto text-[12.5px] text-purple">
+            Week {weekNumber(today)}, {weekCount} of 7
+          </Text>
+        </View>
+        <WeekDots />
       </View>
     </View>
   );
@@ -156,35 +169,71 @@ export function SidebarInsights() {
   );
 }
 
+/** A tiny line of how the last two weeks of meaning went, for the plant row. */
+function Sparkline() {
+  const { entries, today } = useEntries();
+  const values = dailySeries(entries, today, 14).values.meaning;
+  const points = values.map((v, i) => (v === null ? null : { x: 2 + (i / 13) * 70, y: 28 - (v / 100) * 24 })).filter(Boolean) as {
+    x: number;
+    y: number;
+  }[];
+  if (points.length < 2) return null;
+  const d = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+  return (
+    <Svg width={74} height={30} viewBox="0 0 74 30" fill="none">
+      <Path d={d} stroke={signalColor('meaning')} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
 /**
- * Phones and tablets: one card near the top of the page, so the plant and trend stay one glance away however many
- * entries there are. It shows this week's plant and status, with the trend chart below.
+ * Phones and tablets: one slim row for this week's plant, so the page stays calm. Tap it to open the trend chart
+ * underneath.
  */
 export function MobileInsights() {
   const { entries, today } = useEntries();
+  const { ink } = useColors();
+  const [open, setOpen] = useState(false);
   const weekCount = useWeekCount();
   const plant = plantStateForWeek(entries, weekStartKey(today));
   const species = speciesForWeek(weekStartKey(today));
 
   return (
-    <View className="overflow-hidden rounded-3xl border border-line bg-surface">
-      <View className="flex-row items-center gap-4 p-4">
-        <View className="w-20">
-          <Plant tight state={plant} species={species} sway />
+    <View className="border-y border-line">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        accessibilityLabel="This week's plant and trend"
+        onPress={() => setOpen((v) => !v)}
+        className="flex-row items-center gap-3 py-3.5 hover:opacity-80"
+      >
+        <View className="w-12">
+          <Plant tight state={plant} species={species} />
         </View>
-        <View className="flex-1 gap-0.5">
-          <Text className="text-xs font-semibold uppercase tracking-widest text-muted">This week&apos;s plant</Text>
-          <Text className="text-lg font-semibold text-ink">
+        <View className="flex-1">
+          <Text className="text-[15px] font-semibold text-ink">
             {weekCount === 0 ? 'Not planted yet' : vitalityLabel(plant.vitality)}
           </Text>
-          <Text className="text-[13px] text-muted">
-            {weekCount === 0 ? "Write today's entry to plant it." : `${weekCount} of 7 entries`}
+          <Text className="mt-0.5 text-[12.5px] text-purple">
+            {weekCount === 0 ? "Write today's entry to plant it." : `This week's plant, ${weekCount} of 7 entries`}
           </Text>
         </View>
-      </View>
-      <View className="border-t border-line px-4 pb-5 pt-4">
-        <TrendPanel />
-      </View>
+        <Sparkline />
+        <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+          <Path
+            d={open ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6'}
+            stroke={ink}
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+      </Pressable>
+      {open && (
+        <View className="border-t border-line pb-5 pt-4">
+          <TrendPanel />
+        </View>
+      )}
     </View>
   );
 }

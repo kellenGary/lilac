@@ -19,9 +19,9 @@ export function Segmented<T extends string>({ options, value, onChange, fill }: 
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
             onPress={() => onChange(o.value)}
-            className={`rounded-full px-3 py-1.5 ${fill ? 'flex-1 items-center py-2' : ''} ${active ? 'bg-ink' : ''}`}
+            className={`rounded-full px-3 py-1.5 ${fill ? 'flex-1 items-center py-2' : ''} ${active ? 'border border-line bg-surface' : 'border border-transparent'}`}
           >
-            <Text className={`${fill ? 'text-[13px]' : 'text-xs'} font-semibold ${active ? 'text-cream' : 'text-muted'}`}>
+            <Text className={`${fill ? 'text-[13px]' : 'text-[13px]'} font-medium ${active ? 'text-ink' : 'text-muted'}`}>
               {o.label}
             </Text>
           </Pressable>

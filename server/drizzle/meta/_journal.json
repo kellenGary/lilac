@@ -22,6 +22,20 @@
       "when": 1794279241765,
       "tag": "0002_user_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794874229201,
+      "tag": "0003_letters",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794878089970,
+      "tag": "0004_tasks",
+      "breakpoints": true
     }
   ]
 }
