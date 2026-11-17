@@ -1,20 +1,20 @@
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 
 import { useColors } from '@/state/theme';
 
 /**
- * The app's mark: the emoticon ":(:" turned a quarter turn, so it reads top to bottom as a pair of dots (eyes),
- * an arch (a frown), and a second pair of dots. Drawn in the text color so it suits light and dark pages.
+ * The app's mark: a single lilac floret, four petals around a butter-yellow center. The petals and center keep their
+ * colors on light and dark pages; only the outline follows the text color.
  */
 export function FaceMark({ size = 24 }: { size?: number }) {
   const { ink } = useColors();
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx={8.4} cy={5.73} r={2} fill={ink} />
-      <Circle cx={15.6} cy={5.73} r={2} fill={ink} />
-      <Path d="M6 13.77 C8 9.17 16 9.17 18 13.77" stroke={ink} strokeWidth={2.2} strokeLinecap="round" />
-      <Circle cx={8.4} cy={18.27} r={2} fill={ink} />
-      <Circle cx={15.6} cy={18.27} r={2} fill={ink} />
+    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+      <Circle cx={20} cy={10} r={7.5} fill="#B9A3DC" stroke={ink} strokeWidth={2.4} />
+      <Circle cx={30} cy={20} r={7.5} fill="#B9A3DC" stroke={ink} strokeWidth={2.4} />
+      <Circle cx={20} cy={30} r={7.5} fill="#B9A3DC" stroke={ink} strokeWidth={2.4} />
+      <Circle cx={10} cy={20} r={7.5} fill="#B9A3DC" stroke={ink} strokeWidth={2.4} />
+      <Circle cx={20} cy={20} r={5.2} fill="#F4DE8A" stroke={ink} strokeWidth={2.4} />
     </Svg>
   );
 }

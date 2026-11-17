@@ -1,34 +1,36 @@
 import Svg, { Circle, Path } from 'react-native-svg';
 
-import { useColors, useTheme } from '@/state/theme';
+import { useColors } from '@/state/theme';
 
-// Soft fill for each step, rough to great.
-const FILLS = ['#E3C2AE', '#EAD7B0', '#EEE4BA', '#D8E5BB', '#BCD79C'];
-// Dark mode: richer, deeper tones instead of the pastels mixed toward grey, which looked muddy on the dark page.
-const DARK_FILLS = ['#CB7F69', '#D49F5C', '#D6C265', '#9ABD6E', '#6FAE58'];
+// Eyes and mouth for each step, rough to great. Drawn on a 44-unit square.
+const EYES = ['M15 17v4M29 17v4', 'M15 17v4M29 17v4', 'M15 17v4M29 17v4', 'M15 17v4M29 17v4', 'M15 16v5M29 16v5'];
 const MOUTHS = [
-  'M12.5 27 Q20 19.5 27.5 27',
-  'M13 26.2 Q20 22 27 26.2',
-  'M13.5 25 L26.5 25',
-  'M13 23.2 Q20 28.5 27 23.2',
-  'M13 23 C14 29 26 29 27 23',
+  'M14.5 31c3.5-5 11.5-5 15 0',
+  'M15.5 29.5c3-3 10-3 13 0',
+  'M15.5 29h13',
+  'M15 27c3 4 11 4 14 0',
+  'M13.5 26c3.5 6.5 13.5 6.5 17 0z',
 ];
 
-/** A simple drawn face for one of the five feelings. */
+/**
+ * A face for one of the five feelings, drawn as a plain outline so the page stays calm. The chosen one fills with
+ * lilac. The line is the page's text color, so it suits light and dark.
+ */
 export function Face({ level, size = 40, selected }: { level: number; size?: number; selected?: boolean }) {
-  const { ink, cream } = useColors();
-  const { isDark } = useTheme();
+  const { ink, lilac } = useColors();
   const i = Math.max(1, Math.min(5, level)) - 1;
-  const fill = isDark ? DARK_FILLS[i] : FILLS[i];
-  // On the brighter dark-mode fills, the eyes and mouth read better in the page's dark color than in cream.
-  const features = isDark ? cream : ink;
   return (
-    <Svg width={size} height={size} viewBox="0 0 40 40" accessibilityLabel={`Feeling ${level} of 5`}>
-      {selected && <Circle cx={20} cy={20} r={19} fill="none" stroke={ink} strokeWidth={1.4} />}
-      <Circle cx={20} cy={20} r={selected ? 16 : 17} fill={fill} stroke={ink} strokeWidth={1.4} />
-      <Circle cx={14.5} cy={16} r={1.7} fill={features} />
-      <Circle cx={25.5} cy={16} r={1.7} fill={features} />
-      <Path d={MOUTHS[i]} fill="none" stroke={features} strokeWidth={1.6} strokeLinecap="round" />
+    <Svg width={size} height={size} viewBox="0 0 44 44" fill="none" accessibilityLabel={`Feeling ${level} of 5`}>
+      <Circle cx={22} cy={22} r={19} fill={selected ? lilac : 'none'} stroke={ink} strokeWidth={2.4} />
+      <Path d={EYES[i]} stroke={ink} strokeWidth={2.6} strokeLinecap="round" />
+      <Path
+        d={MOUTHS[i]}
+        stroke={ink}
+        strokeWidth={2.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill={i === 4 ? ink : 'none'}
+      />
     </Svg>
   );
 }

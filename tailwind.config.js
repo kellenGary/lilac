@@ -12,6 +12,8 @@ module.exports = {
         cream: 'rgb(var(--color-cream) / <alpha-value>)',
         surface: 'rgb(var(--color-surface) / <alpha-value>)',
         ink: 'rgb(var(--color-ink) / <alpha-value>)',
+        purple: 'rgb(var(--color-purple) / <alpha-value>)',
+        lilac: 'rgb(var(--color-lilac) / <alpha-value>)',
         muted: 'rgb(var(--color-muted) / <alpha-value>)',
         body: 'rgb(var(--color-body) / <alpha-value>)',
         line: 'rgb(var(--color-line) / <alpha-value>)',

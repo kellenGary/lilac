@@ -1,4 +1,5 @@
-import type { Entry } from '@/lib/types';
+import type { Task, TaskMark } from '@/lib/tasks';
+import type { Entry, Letter } from '@/lib/types';
 import { supabase } from './supabase';
 
 const BASE = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8787').replace(/\/$/, '');
@@ -59,6 +60,25 @@ export const api = {
   /** Tags older entries with themes. Call again while `more` is true. */
   refreshInsights: () =>
     request<{ updated: number; failed: number; more: boolean }>('/v1/refresh-insights', { method: 'POST' }),
+  /** `today` is the phone's own date, so a letter opens on the writer's day, not the server's. */
+  listLetters: (today: string) => request<{ letters: Letter[] }>(`/v1/letters?today=${today}`).then((r) => r.letters),
+  getLetter: (id: string, today: string) => request<Letter>(`/v1/letters/${id}?today=${today}`),
+  createLetter: (text: string, unlockOn: string, today: string) =>
+    request<Letter>('/v1/letters', { method: 'POST', body: JSON.stringify({ text, unlockOn, today }) }),
+  markLetterOpened: (id: string, today: string) =>
+    request<void>(`/v1/letters/${id}/open?today=${today}`, { method: 'PUT' }),
+  deleteLetter: (id: string) => request<void>(`/v1/letters/${id}`, { method: 'DELETE' }),
+  listTasks: () => request<{ tasks: Task[]; marks: TaskMark[] }>('/v1/tasks'),
+  createTask: (title: string, kind: 'daily' | 'once', theme: string | null, today: string) =>
+    request<Task>('/v1/tasks', { method: 'POST', body: JSON.stringify({ title, kind, theme, today }) }),
+  deleteTask: (id: string) => request<void>(`/v1/tasks/${id}`, { method: 'DELETE' }),
+  /** Ticks a task for a day. `mood` (1-5) is how it felt; leave it out to just tick. */
+  tickTask: (id: string, day: string, today: string, mood?: number | null) =>
+    request<void>(`/v1/tasks/${id}/marks/${day}`, { method: 'PUT', body: JSON.stringify({ mood: mood ?? null, today }) }),
+  untickTask: (id: string, day: string) => request<void>(`/v1/tasks/${id}/marks/${day}`, { method: 'DELETE' }),
+  startExperiment: (id: string, today: string) =>
+    request<void>(`/v1/tasks/${id}/experiment`, { method: 'PUT', body: JSON.stringify({ today }) }),
+  stopExperiment: (id: string) => request<void>(`/v1/tasks/${id}/experiment`, { method: 'DELETE' }),
   exportData: () =>
     request<{ exportedAt: string; entries: Entry[] }>('/v1/export').then((r) => ({
       ...r,

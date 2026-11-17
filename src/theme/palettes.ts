@@ -7,6 +7,8 @@ export type Palette = {
   cream: string; // page background
   surface: string; // raised panels and inputs
   ink: string; // main text, and the strokes of drawings
+  purple: string; // secondary text: labels, prompts, counts
+  lilac: string; // accent fill, e.g. the chosen mood face
   muted: string;
   body: string;
   line: string; // hairlines
@@ -32,7 +34,9 @@ export type Phase = 'dawn' | 'day' | 'dusk' | 'night';
 const lightDay: Palette = {
   cream: '#F8F3E6',
   surface: '#FFFCF3',
-  ink: '#2A2A24',
+  ink: '#17161A',
+  purple: '#6B54A3',
+  lilac: '#B9A3DC',
   muted: '#6B6752',
   body: '#4A4A3E',
   line: '#E3DAC3',
@@ -46,7 +50,7 @@ const lightDay: Palette = {
   roseInk: '#8A3622',
   roseLine: '#E2B3A4',
   roseSoft: '#F6D9CE',
-  shadow: '#2A2A24',
+  shadow: '#17161A',
   blobSage: '#CFDDB8',
   blobYellow: '#F1E1A0',
   blobPeach: '#F2C9A0',
@@ -56,6 +60,8 @@ const darkDay: Palette = {
   cream: '#1C1B16',
   surface: '#26241D',
   ink: '#F1EBDB',
+  purple: '#B9A3DC',
+  lilac: '#6B54A3',
   muted: '#A39E88',
   body: '#CFC8B2',
   line: '#3A372C',
@@ -94,7 +100,7 @@ const TINTS: Record<Mode, Record<Phase, Partial<Palette>>> = {
     night: {
       cream: '#EDE3E2',
       surface: '#F8F0EE',
-      ink: '#2B262A',
+      ink: '#17161A',
       line: '#DACBC8',
       track: '#E3D6D3',
       edge: '#CEBEBB',

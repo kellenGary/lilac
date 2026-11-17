@@ -20,3 +20,15 @@ export type Entry = {
 };
 
 export type Classification = Pick<Entry, 'scores' | 'highlights' | 'themes' | 'crisis'>;
+
+/** A letter to your future self. `text` is only present once it has unlocked. */
+export type Letter = {
+  id: string;
+  /** The day it was written, YYYY-MM-DD. */
+  writtenOn: string;
+  unlockOn: string;
+  locked: boolean;
+  /** True once the writer has read it after it unlocked. */
+  opened: boolean;
+  text?: string;
+};

@@ -77,49 +77,6 @@ export function weekRecap(entries: Entry[], today: string): WeekRecap | null {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Calendar
-
-export type CalendarDay = {
-  key: string;
-  inMonth: boolean;
-  entry: Entry | undefined;
-  isToday: boolean;
-  future: boolean;
-};
-
-/** A month as Monday-first weeks. Days outside the month are included (inMonth false) to square off the grid. */
-export function monthGrid(entries: Entry[], year: number, month: number, today: string): CalendarDay[][] {
-  const byDate = new Map(entries.map((e) => [e.date, e]));
-  const first = toKey(new Date(year, month, 1));
-  const last = toKey(new Date(year, month + 1, 0));
-  const weeks: CalendarDay[][] = [];
-  for (let start = weekStartKey(first); start <= last; start = addDays(start, 7)) {
-    weeks.push(
-      Array.from({ length: 7 }, (_, i) => {
-        const key = addDays(start, i);
-        return {
-          key,
-          inMonth: key >= first && key <= last,
-          entry: byDate.get(key),
-          isToday: key === today,
-          future: key > today,
-        };
-      }),
-    );
-  }
-  return weeks;
-}
-
-/** Days written and the typical feeling for a month, for the line under the calendar. */
-export function monthSummary(entries: Entry[], year: number, month: number) {
-  const prefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
-  const list = entries.filter((e) => e.date.startsWith(prefix));
-  if (list.length === 0) return { days: 0, typical: null as number | null };
-  const avg = list.reduce((sum, e) => sum + feelingOf(e), 0) / list.length;
-  return { days: list.length, typical: Math.max(1, Math.min(5, Math.round(avg))) };
-}
-
-// ---------------------------------------------------------------------------------------------------------------
 // On this day
 
 export type Memory = { label: string; entry: Entry };

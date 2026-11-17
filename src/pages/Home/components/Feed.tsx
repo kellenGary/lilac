@@ -1,13 +1,13 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { weekNumber, weekRangeLabel } from '@/lib/dates';
 import type { PlantState } from '@/lib/plant';
 import { isSearching, searchEntries, snippet } from '@/lib/search';
-import { summarizeWeek } from '@/lib/summary';
 import type { Entry } from '@/lib/types';
-import { EntryRow, Plant, Reveal, Segmented } from '@/shared-components';
 import { speciesForWeek } from '@/lib/plantSpecies';
+import { EntryRow, Plant, Reveal, Segmented } from '@/shared-components';
 import { useEntries } from '@/state/entries';
 import { FirstEntryPrompt } from './FirstEntryPrompt';
 import { SearchField, SearchIcon } from './SearchField';
@@ -16,19 +16,22 @@ import { YearView } from './YearView';
 export type FeedGroup = { weekStart: string; entries: Entry[]; current: boolean; plant: PlantState };
 
 function WeekDivider({ group }: { group: FeedGroup }) {
+  const router = useRouter();
   const label = group.current
-    ? `Week ${weekNumber(group.weekStart)}, in progress`
-    : `Week ${weekNumber(group.weekStart)}, ${weekRangeLabel(group.weekStart)}`;
+    ? `Week ${weekNumber(group.weekStart)} · in progress`
+    : `Week ${weekNumber(group.weekStart)} · ${weekRangeLabel(group.weekStart)}`;
   return (
-    <View className="flex-row items-center gap-4 border-t border-line pb-6 pt-2">
-      <View className="w-28 sm:w-40" accessibilityLabel={`Plant for week ${weekNumber(group.weekStart)}`}>
+    <Pressable
+      accessibilityRole="link"
+      accessibilityLabel={`${label}. Open this week`}
+      onPress={() => router.push({ pathname: '/week/[start]', params: { start: group.weekStart } })}
+      className="flex-row items-center justify-between gap-3 pb-3 pt-7 hover:opacity-70"
+    >
+      <Text className="flex-1 text-[11px] font-semibold uppercase tracking-[1.3px] text-purple">{label} ›</Text>
+      <View className="h-9 w-9" pointerEvents="none">
         <Plant tight state={group.plant} species={speciesForWeek(group.weekStart)} />
       </View>
-      <View className="flex-1 gap-1">
-        <Text className="text-xs font-semibold uppercase tracking-widest text-muted">{label}</Text>
-        <Text className="max-w-[52ch] text-[15px] leading-[22px] text-body">{summarizeWeek(group.entries)}</Text>
-      </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -42,7 +45,7 @@ function Legend() {
       ].map(([label, dot]) => (
         <View key={label} className="flex-row items-center gap-1.5">
           <View className={`h-2 w-2 rounded-sm ${dot}`} />
-          <Text className="text-[13px] text-muted">{label}</Text>
+          <Text className="text-[13px] font-medium text-purple">{label}</Text>
         </View>
       ))}
     </View>
@@ -67,7 +70,7 @@ export function Feed({ groups }: { groups: FeedGroup[] }) {
   return (
     <View>
       <View className="flex-row items-center justify-between gap-3 pb-5">
-        <Text className="text-4xl font-bold tracking-normal text-ink">Journal</Text>
+        <Text className="text-[26px] font-semibold tracking-tight text-ink">Journal</Text>
         {entries.length > 0 && (
           <View className="flex-row items-center gap-1">
             {view === 'list' && (
@@ -76,7 +79,7 @@ export function Feed({ groups }: { groups: FeedGroup[] }) {
                 accessibilityLabel={searchOpen ? 'Hide search' : 'Search your entries'}
                 accessibilityState={{ expanded: searchOpen }}
                 onPress={() => (searchOpen ? closeSearch() : setSearchOpen(true))}
-                className={`h-11 w-11 items-center justify-center rounded-full hover:opacity-70 ${searchOpen ? 'bg-track' : ''}`}
+                className={`h-10 w-10 items-center justify-center rounded-full border hover:opacity-70 ${searchOpen ? 'border-line bg-track' : 'border-line'}`}
               >
                 <SearchIcon />
               </Pressable>
@@ -103,7 +106,7 @@ export function Feed({ groups }: { groups: FeedGroup[] }) {
             </Reveal>
           )}
           {entries.length > 0 && !searching && (
-            <View className="pb-7">
+            <View className="pb-1 pt-3">
               <Legend />
             </View>
           )}
@@ -130,7 +133,7 @@ export function Feed({ groups }: { groups: FeedGroup[] }) {
                   // Only the first screenful staggers in; the rest render plainly (fewer running animations).
                   return n < 8 ? (
                     <Reveal key={entry.date} delay={150 + n * 90}>
-                      <EntryRow entry={entry} delay={150 + n * 90} />
+                      <EntryRow entry={entry} />
                     </Reveal>
                   ) : (
                     <EntryRow key={entry.date} entry={entry} />

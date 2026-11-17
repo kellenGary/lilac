@@ -8,7 +8,7 @@ export function CheckIn({ value, onChange }: { value: number | null; onChange: (
   const chosen = FEELINGS.find((f) => f.level === value);
   return (
     <View className="gap-1.5">
-      <Text className="text-sm text-muted">
+      <Text className="text-[13px] font-semibold text-purple">
         {chosen ? `Feeling ${chosen.label.toLowerCase()}` : 'How are you feeling? (optional)'}
       </Text>
       <View className="-ml-1.5 flex-row">
@@ -21,7 +21,7 @@ export function CheckIn({ value, onChange }: { value: number | null; onChange: (
             onPress={() => onChange(value === f.level ? null : f.level)}
             className={`h-11 w-11 items-center justify-center hover:opacity-100 ${value !== null && value !== f.level ? 'opacity-50' : ''}`}
           >
-            <Face level={f.level} size={34} selected={value === f.level} />
+            <Face level={f.level} size={36} selected={value === f.level} />
           </Pressable>
         ))}
       </View>

@@ -23,6 +23,16 @@ export function formatLong(key: string): string {
   return fromKey(key).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
+/** Just the weekday, e.g. "Monday". */
+export function formatWeekday(key: string): string {
+  return fromKey(key).toLocaleDateString('en-US', { weekday: 'long' });
+}
+
+/** Month and day, e.g. "November 16". */
+export function formatMonthDay(key: string): string {
+  return fromKey(key).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+}
+
 export function formatShort(key: string): string {
   return fromKey(key).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
